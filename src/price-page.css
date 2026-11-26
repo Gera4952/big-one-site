@@ -81,4 +81,21 @@
 .other-directions { margin-top: 36px; }
 .other-directions h2 { margin-bottom: 12px; font-size: 22px; }
 .other-directions .price-chips { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0; }
-@media (max-width: 759px) { .direction-actions .button { width: 100%; } }
+@media (max-width: 759px) {
+  .price-page { padding-top: 10px; }
+  .price-page > .eyebrow { display: none; }
+  .price-page h1 { font-size: clamp(27px, 7.3vw, 35px); text-wrap: initial; }
+  .price-page .section-intro { margin-bottom: 12px; }
+  .price-tools { padding-block: 7px; background: var(--bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .price-chips { margin-top: 6px; }
+  .price-chips a { min-height: 44px; }
+  .price-category { scroll-margin-top: 116px; }
+  .price-category h2 { font-size: 22px; }
+  .price-preview { margin-top: 22px; }
+  .price-preview-head { align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
+  .price-direction summary { gap: 8px; padding-inline: 12px; }
+  .price-work, .price-direction li { gap: 8px; }
+  .price-work { padding-inline: 11px; }
+  .price-work > strong { max-width: 12ch; white-space: normal; text-align: right; }
+  .direction-actions .button { width: 100%; }
+}

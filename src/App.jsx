@@ -2,10 +2,13 @@ import React, { useEffect, useRef, useState, useId } from 'react';
 import { ArrowUpRight, ArrowRight, Phone, MapPin, List, X, CheckCircle, CaretDown, MagnifyingGlass, ChatCircleDots, WhatsappLogo, TelegramLogo, Star, Clock, ShieldCheck, Eye, Handshake, CreditCard, MapTrifold, ListChecks, Wrench, PencilSimple, Hammer, Armchair, SpeakerHifi, Drop, Gift } from '@phosphor-icons/react';
 import catalog from './data/services.json';
 import { FullPriceList, DirectionPrices, PriceRows, PricePreview, fromPrice } from './components/FullPriceList.jsx';
+import { LeadCaptcha } from './components/LeadCaptcha.jsx';
 import { directionById, pageOf, works } from './seo.js';
 import { site, whatsappUrl, telegramUrl, vkUrl, hoursText, openStatus } from './site.js';
 
 const BASE = import.meta.env.BASE_URL;
+const leadsUrl = import.meta.env.VITE_SITE_LEADS_URL || site.leadsUrl;
+const captchaSiteKey = leadsUrl ? import.meta.env.VITE_SITE_TURNSTILE_KEY : '';
 const phone = 'tel:+79160981891';
 const phoneLabel = '8 916 098 18 91';
 const maps = 'https://yandex.ru/maps/org/the_big_one_garage/152908357603/';
@@ -173,61 +176,67 @@ function PhoneInput({ label = false }) {
   </>;
 }
 
-/* Sending shared by the full form and the phone-only "call me back" form. The lead goes straight to «Заявки»
-   in the CRM (site.json → leadsUrl); without it — to the site's own mail server. */
+/* The same form sends from the homepage, service dialogs and price pages. */
 function useLead(service) {
   const [status, setStatus] = useState('idle'), [error, setError] = useState(''), [started] = useState(Date.now());
-  const key = useRef(requestId());
+  const [captchaToken, setCaptchaToken] = useState(''), [captchaAttempt, setCaptchaAttempt] = useState(0);
+  const key = useRef(null);
+  function resetCaptcha() { setCaptchaToken(''); setCaptchaAttempt(value => value + 1); }
   async function submit(e) {
     e.preventDefault(); if (status === 'sending') return;
     const form = e.currentTarget; const fields = Object.fromEntries(new FormData(form));
     if (!/^[78]\d{10}$/.test(fields.phone.replace(/\D/g, ''))) { setError('Введите российский номер: +7 и ещё 10 цифр.'); form.elements.phone.focus(); return; }
+    for (const name of ['name', 'make', 'model', 'plate', 'message']) fields[name] = fields[name].trim();
+    const missing = ['name', 'make', 'model', 'message'].find(name => !fields[name]);
+    if (missing) { setError('Заполните обязательные поля.'); form.elements[missing].focus(); return; }
+    if (captchaSiteKey && !captchaToken) { setError('Дождитесь завершения проверки безопасности.'); return; }
+    const carName = [fields.make, fields.model].map(part => part.replaceAll('·', ' ')).join(' ');
+    const car = fields.plate ? `${carName} · ${fields.plate.replaceAll('·', '').toUpperCase()}` : carName;
+    key.current ??= requestId();
     setStatus('sending'); setError('');
     const params = new URLSearchParams(location.search); const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 20000);
     try {
-      const response = await fetch(site.leadsUrl || `${BASE}api/leads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ ...fields, service, started, id: key.current, source: location.pathname, utm: Object.fromEntries([...params].filter(([k]) => /^utm_(source|medium|campaign|term|content)$/.test(k))) }) });
+      const response = await fetch(leadsUrl || `${BASE}api/leads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ ...fields, car, captcha_token: captchaToken, service, started, id: key.current, source: location.pathname, utm: Object.fromEntries([...params].filter(([k]) => /^utm_(source|medium|campaign|term|content)$/.test(k))) }) });
       const body = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(body.error || 'Не удалось отправить заявку.');
+      if (!response.ok || body.ok !== true || (leadsUrl && !Number.isInteger(body.id))) throw new Error(body.error || 'Не получили подтверждение отправки.');
       setStatus('success'); window.dispatchEvent(new CustomEvent('bigone:lead-sent', { detail: { service } }));
     } catch (err) {
+      if (captchaSiteKey) resetCaptcha();
       setStatus('idle'); setError(err.name === 'AbortError' ? 'Не получили подтверждение отправки. Позвоните нам или попробуйте ещё раз.' : err.message);
     } finally { clearTimeout(timer); }
   }
-  return { status, error, submit };
+  return { status, error, submit, setCaptchaToken, captchaAttempt, resetCaptcha };
 }
 
-function LeadForm({ service = '', consultation = false, onPrivacy }) {
+function LeadForm({ service = '', consultation = false, onPrivacy, submitLabel }) {
   const [visit, setVisit] = useState('');
-  const { status, error, submit } = useLead(leadLabel(service, visit && `удобно: ${visit.toLowerCase()}`));
-  if (status === 'success') return <div className="success" role="status"><CheckCircle size={44} weight="light" /><h3>Заявка отправлена</h3><p>Скоро перезвоним. Записываться вас никто не обязывает — сначала просто поговорим.</p><a href={phone}>Если вопрос срочный: {phoneLabel}</a></div>;
+  const { status, error, submit, setCaptchaToken, captchaAttempt, resetCaptcha } = useLead(leadLabel(service, visit && `удобно: ${visit.toLowerCase()}`));
+  if (status === 'success') return <div className="success" role="status"><CheckCircle size={36} weight="light" /><h3>Заявка отправлена</h3><p>Перезвоним по указанному номеру.</p><a href={phone}>Если вопрос срочный: {phoneLabel}</a></div>;
   return <form onSubmit={submit} className="lead-form">
     {service && <p className="selected-service">Ваш запрос: {service}</p>}
-    <label>Ваш телефон <span className="required">*</span><PhoneInput label /></label>
-    <label>Автомобиль <span className="optional">необязательно</span><input name="car" placeholder="Например, Volkswagen Polo, 2018" maxLength={120} /></label>
-    <label>Что с машиной? <span className="optional">необязательно</span><textarea name="message" placeholder="Например: стучит спереди на кочках" maxLength={2000} rows={3} /></label>
+    <div className="lead-fields-grid">
+      <label>Имя<input name="name" autoComplete="given-name" maxLength={80} required /></label>
+      <label>Телефон<PhoneInput label /></label>
+      <label>Марка<input name="make" maxLength={40} required /></label>
+      <label>Модель<input name="model" maxLength={50} required /></label>
+    </div>
+    <label>Госномер <span className="optional">необязательно</span><input name="plate" autoCapitalize="characters" spellCheck={false} maxLength={20} placeholder="А123ВС 777" /></label>
+    <label>Текст обращения<textarea name="message" placeholder="Например, стучит спереди на кочках" maxLength={2000} rows={3} required /></label>
     <ChoiceChips label="Когда удобно приехать?" options={visits} value={visit} onChange={setVisit} />
     <div className="honeypot" aria-hidden="true"><label>Ваш сайт<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
     <label className="consent"><input type="checkbox" name="consent" required value="yes" /><span>Согласен на обработку указанных данных для ответа на обращение. <button type="button" onClick={onPrivacy}>Об обработке данных</button></span></label>
+    {captchaSiteKey && <LeadCaptcha siteKey={captchaSiteKey} onToken={setCaptchaToken} attempt={captchaAttempt} onRetry={resetCaptcha} />}
     <p className="form-error" role="alert">{error}</p>
-    <button className="button primary" disabled={status === 'sending'}>{status === 'sending' ? 'Отправляем…' : consultation ? 'Проконсультироваться' : 'Узнать стоимость'}<ArrowUpRight size={20} /></button>
+    <button className="button primary" disabled={status === 'sending'}>{status === 'sending' ? 'Отправляем…' : submitLabel || (consultation ? 'Проконсультироваться' : 'Отправить заявку')}<ArrowUpRight size={20} /></button>
     <p className="form-note">{site.responseTime ? `${site.responseTime} ` : ''}Ни к чему не обязывает.</p>
   </form>;
 }
 
 function Callback({ service = '', title = 'Не хотите заполнять форму?', text = 'Оставьте номер — перезвоним сами.', onPrivacy, compact = false }) {
-  const { status, error, submit } = useLead(service ? `Перезвоните мне — ${service}` : 'Перезвоните мне');
-  if (status === 'success') return <div className={`callback ${compact ? 'is-compact' : ''}`} role="status"><CheckCircle size={28} /><div><b>Спасибо! Перезвоним вам.</b><p>Если вопрос срочный: <a href={phone}>{phoneLabel}</a></p></div></div>;
-  return <form className={`callback ${compact ? 'is-compact' : ''}`} onSubmit={submit}>
+  return <div className={`callback ${compact ? 'is-compact' : ''}`}>
     {title && <div className="callback-copy"><b>{title}</b><p>{text}</p></div>}
-    <div className="callback-row">
-      <label><PhoneInput /></label>
-      <button className="button primary">{status === 'sending' ? 'Отправляем…' : 'Перезвоните мне'}</button>
-    </div>
-    <div className="honeypot" aria-hidden="true"><label>Ваш сайт<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
-    <label className="consent"><input type="checkbox" name="consent" required value="yes" /><span>Согласен на обработку номера для обратного звонка. <button type="button" onClick={onPrivacy}>Подробнее</button></span></label>
-    <p className="form-error" role="alert">{error}</p>
-    {site.responseTime && <p className="form-note">{site.responseTime}</p>}
-  </form>;
+    <LeadForm service={service} onPrivacy={onPrivacy} submitLabel="Перезвоните мне" />
+  </div>;
 }
 
 /* Single-choice chips that behave as one radio group for screen readers and keyboards. */
