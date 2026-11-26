@@ -26,7 +26,7 @@ const baseTrust = [
   { icon: 'eye', title: 'Показываем, что сломалось и почему' },
 ];
 const mainServices = [
-  { id: 'modal-412277', title: 'Сварка кузова', text: 'Пороги, днище и арки', image: 'welding-work' },
+  { id: 'modal-412277', title: 'Сварка кузова', text: 'Пороги, днище и арки', image: 'welding' },
   { id: 'modal-412248', title: 'Плановое ТО', text: 'Масло, фильтры и осмотр', image: 'maintenance' },
   { id: 'modal-412250', title: 'Диагностика', text: 'Поиск причины неисправности', image: 'diagnostics' },
   { id: 'modal-412249', title: 'Шиномонтаж', text: 'Замена шин и балансировка', image: 'tires' },

@@ -10,13 +10,8 @@ export const directionCopy = {
     answer: 'Да. Снимите повреждение крупно и сделайте общий кадр, чтобы было видно, где оно находится. По фото сориентируем, что осмотреть в первую очередь. Стоимость согласуем после осмотра машины.',
     related: ['antikor', 'vyhlopnaya-sistema'],
     photo: {
-      file: 'service-welding-work.webp',
-      alt: 'Мастер в защитной маске сваривает металл в передней части кузова',
-      credit: {
-        author: 'Anastasia Shuraeva',
-        source: 'https://www.pexels.com/photo/man-repairing-broken-car-8470882/',
-        ...pexels,
-      },
+      file: 'service-welding.webp',
+      alt: 'Сварка автомобильного порога под дверью',
     },
   },
   'tehnicheskoe-obsluzhivanie': {
