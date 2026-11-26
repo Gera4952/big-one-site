@@ -1,0 +1,91 @@
+#!/usr/bin/env node
+/* Turns the built single-page site into ready HTML pages for search engines:
+   the home page, the full price list and one page per direction, each with its own title,
+   description, canonical address and structured data; then writes sitemap.xml and robots.txt.
+   Every address comes from site.json → siteUrl, so moving to another domain is one edit there. */
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const client = path.join(root, 'dist', 'client');
+const entry = path.join(root, 'dist', 'ssr', 'entry-server.js');
+for (const file of [path.join(client, 'index.html'), entry]) if (!existsSync(file)) throw new Error('Prerender input is missing: ' + file);
+
+const { render, directions, faq, site, catalog, works } = await import(pathToFileURL(entry).href);
+const base = process.env.SITE_BASE_PATH || '/big-site/';
+// SITE_URL overrides site.json for one build (e.g. the html pack for another domain).
+const siteUrl = (process.env.SITE_URL || site.siteUrl || '').replace(/\/?$/, '/');
+if (!/^https?:\/\//.test(siteUrl)) throw new Error('site.json → siteUrl must be an absolute address, e.g. https://example.ru/');
+const template = readFileSync(path.join(client, 'index.html'), 'utf8');
+if (!template.includes('<div id="root"></div>')) throw new Error('index.html has no empty <div id="root"></div> to fill');
+
+const escape = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const jsonLd = (data) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
+const amount = (price) => Number(String(price).replace(/\D/g, '')) || 0;
+const priceOf = (name) => catalog.services.find(service => service.name === name)?.price;
+const allRows = catalog.categories.flatMap(category => category.groups.flatMap(group => group.rows));
+
+function page({ file, route, title, description, ld = [] }) {
+  const url = siteUrl + file.replace(/(^|\/)index\.html$/, '');
+  let html = template
+    .replace(/<title>[^<]*<\/title>/, `<title>${escape(title)}</title>`)
+    .replace(/(<meta name="description" content=")[^"]*/, `$1${escape(description)}`)
+    .replace(/(<meta property="og:title" content=")[^"]*/, `$1${escape(title)}`)
+    .replace(/(<meta property="og:description" content=")[^"]*/, `$1${escape(description)}`)
+    .replace(/(<link rel="canonical" href=")[^"]*/, `$1${url}`)
+    .replace(/(<meta property="og:url" content=")[^"]*/, `$1${url}`)
+    .replace('</head>', `${ld.map(jsonLd).join('')}</head>`);
+  const body = render(base + route);
+  if (body.length < 2000) throw new Error(`Prerender of ${file} produced almost no content`);
+  // data-page says which page this file is, so it opens correctly under any address (/prices, /prices.html, a builder's own URL).
+  html = html.replace('<div id="root"></div>', `<div id="root" data-page="${escape(base + route)}">${body}</div>`);
+  const target = path.join(client, file);
+  mkdirSync(path.dirname(target), { recursive: true });
+  writeFileSync(target, html);
+  return url;
+}
+
+const breadcrumbs = (items) => ({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: items.map(([name, item], i) => ({ '@type': 'ListItem', position: i + 1, name, item })) });
+const offers = (name, rows) => ({ '@context': 'https://schema.org', '@type': 'OfferCatalog', name, itemListElement: rows.filter(row => amount(row.price)).map(row => ({
+  '@type': 'Offer', itemOffered: { '@type': 'Service', name: row.name },
+  priceSpecification: { '@type': 'PriceSpecification', priceCurrency: 'RUB', [String(row.price).includes('от') ? 'minPrice' : 'price']: amount(row.price) },
+})) });
+
+const phone = '8 916 098 18 91';
+const tyres = directions.find(direction => direction.slug === 'shinomontazh');
+const highlights = [['ТО', priceOf('Техническое обслуживание')], ['диагностика', priceOf('Диагностика')], ['шиномонтаж', tyres?.from && `от ${tyres.from.toLocaleString('ru-RU')} ₽`]].filter(([, p]) => p).map(([n, p]) => `${n} ${p}`).join(', ');
+const urls = [];
+urls.push(page({
+  file: 'index.html', route: '',
+  title: 'Автосервис на Соколиной Горе — ремонт любых автомобилей | The Big One Garage',
+  description: `Ремонт и обслуживание автомобилей любых марок на Соколиной Горе, Москва: ${highlights}. ${works(allRows.length)} с ценами на сайте. Запись: ${phone}.`,
+  ld: [{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) }],
+}));
+urls.push(page({
+  file: 'prices.html', route: 'prices.html',
+  title: `Цены на ремонт автомобилей — ${works(allRows.length)} | The Big One Garage, Соколиная Гора`,
+  description: `Прайс автосервиса The Big One Garage на Соколиной Горе: шиномонтаж, двигатель, подвеска, тормоза, электрика и другие работы — ${allRows.length} позиций с ценами. Запись: ${phone}.`,
+  ld: [breadcrumbs([['Главная', siteUrl], ['Цены', siteUrl + 'prices.html']])],
+}));
+for (const direction of directions) {
+  const category = catalog.categories.find(item => item.id === direction.id);
+  urls.push(page({
+    file: direction.path, route: direction.path, title: direction.title, description: direction.description,
+    ld: [breadcrumbs([['Главная', siteUrl], ['Цены', siteUrl + 'prices.html'], [direction.name, siteUrl + direction.path]]), offers(direction.name, category.groups.flatMap(group => group.rows))],
+  }));
+}
+
+const today = new Date().toISOString().slice(0, 10);
+writeFileSync(path.join(client, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((loc, i) => `  <url><loc>${loc}</loc><lastmod>${today}</lastmod><priority>${i === 0 ? '1.0' : i === 1 ? '0.9' : '0.7'}</priority></url>`).join('\n')}\n</urlset>\n`);
+writeFileSync(path.join(client, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: ${base}api/\n\nSitemap: ${siteUrl}sitemap.xml\n`);
+// The 404 page is plain HTML: point its links at the current base path.
+const notFound = path.join(client, '404.html');
+if (existsSync(notFound)) {
+  let html = readFileSync(notFound, 'utf8').replaceAll('/big-site/', base);
+  // The same Metrika counter as on the other pages, so visits to missing addresses are counted too.
+  const counter = template.match(/<script type="text\/javascript">[\s\S]*?mc\.yandex\.ru\/metrika[\s\S]*?<\/script>/)?.[0];
+  if (counter && !html.includes('mc.yandex.ru/metrika')) html = html.replace('<head>', () => `<head>\n${counter}`);
+  writeFileSync(notFound, html);
+}
+console.log(`Prerendered ${urls.length} pages, sitemap.xml and robots.txt for ${siteUrl}`);

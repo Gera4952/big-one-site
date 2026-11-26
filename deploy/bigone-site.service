@@ -1,0 +1,17 @@
+[Unit]
+Description=Big One Garage standalone website
+After=network.target
+[Service]
+Type=simple
+User=bigone
+WorkingDirectory=/opt/bigone-site
+EnvironmentFile=/opt/bigone-site/.env
+ExecStart=/usr/bin/node /opt/bigone-site/server/app.mjs
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+[Install]
+WantedBy=multi-user.target
