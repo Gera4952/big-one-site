@@ -80,12 +80,13 @@ const steps = [
   ['Согласуем работы и цену', 'Если появятся дополнительные работы, обсудим их с вами до ремонта.'],
 ];
 export const faq = [
-  ['Нужно записываться заранее?', `Лучше да — тогда не придётся ждать${site.hours?.length ? `. Работаем ${hoursText().toLowerCase()}` : ''}. Позвоните или оставьте номер — подберём удобное время и скажем, сколько займёт ремонт.`],
-  ['Вы чините мою марку?', 'Да. Берём машины любых марок и любого года выпуска.'],
-  ['Можно узнать цену заранее?', 'Многие цены есть в прайсе на сайте. Точную сумму для вашей машины назовём после осмотра — иногда сначала нужна диагностика.'],
-  ['Заявка на сайте — это уже запись?', 'После заявки мы перезвоним, ответим на вопросы и договоримся о времени, если решите приехать.'],
-  ['Можно приехать со своими запчастями?', 'Можно. Расскажите заранее, что у вас есть, — мастер скажет, подойдут ли они.'],
-  ['Как вас найти?', `${address.replace('стр.', 'строение')}. Маршрут — в Яндекс Картах. Если не найдёте въезд, позвоните: ${phoneLabel}.`],
+  ['Как записаться на ремонт?', 'Позвоните или оставьте заявку. Назовите марку и модель, расскажите, что беспокоит. Подберём удобное время визита и скажем, с какой проверки начнём.'],
+  ['Сколько будет стоить ремонт?', 'Цены на типовые работы есть в прайсе. Если знаете, что нужно заменить, назовите модель машины, и мы сориентируем по стоимости. Если причина поломки пока неясна, сначала осмотрим машину и согласуем цену.'],
+  ['Что, если найдёте другие неисправности?', 'Расскажем, что обнаружили, сколько стоит устранить проблему и можно ли отложить ремонт. Дополнительные работы делаем только после вашего согласия.'],
+  ['Какие автомобили вы обслуживаете?', 'Работаем с автомобилями любых марок и годов выпуска. При записи сообщите модель, год и двигатель, если знаете. Это поможет подобрать детали и оценить работу.'],
+  ['Можно приехать со своими запчастями?', 'Да. Перед визитом сообщите артикул или пришлите фото упаковки. Мастер подскажет, подходят ли детали к вашей машине.'],
+  ['Заявка на сайте сразу бронирует время?', 'Мы перезвоним по указанному номеру, ответим на вопросы и подтвердим время визита, если вы решите записаться.'],
+  ['Где находится сервис?', `${address.replace('стр.', 'строение')}.${hoursText() ? ` ${hoursText()}.` : ''} Ссылка на маршрут есть в разделе «Контакты и проезд».`],
 ];
 
 /* Open dialogs, newest last. Each one adds a history entry, so the phone's Back button closes
@@ -272,10 +273,30 @@ function Reviews() {
 export function App({ path = typeof location === 'undefined' ? BASE : location.pathname }) {
   const page = pageOf(path), home = page.type === 'home';
   const [menu, setMenu] = useState(false), [modal, setModal] = useState(null);
+  const [scrolled, setScrolled] = useState(false);
+  const header = useRef(null);
   const navigation = useRef(null);
   const menuButton = useRef(null);
   useEffect(() => {
-    if (menu) navigation.current.querySelector('a')?.focus();
+    let previous;
+    const update = () => {
+      const pastTop = window.scrollY > 16;
+      if (pastTop === previous) return;
+      previous = pastTop;
+      setScrolled(pastTop);
+    };
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+  useEffect(() => {
+    if (!menu) return;
+    navigation.current?.querySelector('a')?.focus({ preventScroll: true });
+    const dismiss = (event) => {
+      if (!header.current?.contains(event.target)) setMenu(false);
+    };
+    document.addEventListener('pointerdown', dismiss);
+    return () => document.removeEventListener('pointerdown', dismiss);
   }, [menu]);
   const closeMenuOnEscape = (event) => {
     if (event.key !== 'Escape' || !menu) return;
@@ -286,7 +307,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
   const nav = [['#reviews', 'Отзывы'], ['#about', 'Как работаем'], ['#contacts', 'Контакты']];
   return <>
     <a className="skip" href="#main">Перейти к содержанию</a>
-    <header className="header" onKeyDown={closeMenuOnEscape}>
+    <header ref={header} className={`header${scrolled ? ' is-scrolled' : ''}`} onKeyDown={closeMenuOnEscape}>
       <div className="header-inner wrap">
         <Brand />
         <nav ref={navigation} id="site-navigation" aria-label="Основная навигация" className={menu ? 'open' : ''}>
@@ -324,7 +345,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
           <button className="button secondary" type="submit">Найти</button>
         </form>
         <div className="service-grid">{mainServices.map(({ id, title, text, image }) => <a className="service-card" key={id} href={directionLink(id)}>
-          <img src={`${BASE}assets/service-${image}.webp`} width={512} height={320} alt="" loading="lazy" decoding="async" />
+          <span className="service-card-photo"><img src={`${BASE}assets/service-${image}.webp`} width={512} height={320} alt="" loading="lazy" decoding="async" /></span>
           <div className="service-card-copy"><h3>{title}</h3><p>{text}</p><ArrowRight size={18} aria-hidden="true" /></div>
         </a>)}</div>
       </section>
@@ -362,9 +383,10 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
 
       <Reviews />
 
-      <section className="faq section wrap" id="faq">
-        <Heading eyebrow="Перед визитом" title="Частые вопросы" />
-        <div className="faq-list">{faq.map(([q, a]) => <details key={q}><summary>{q}<CaretDown size={20} /></summary><p>{a}</p></details>)}</div>
+      <section className="faq section wrap" id="faq" aria-labelledby="faq-title">
+        <h2 id="faq-title">Частые вопросы</h2>
+        <div className="faq-list">{faq.map(([q, a]) => <details key={q}><summary>{q}<CaretDown size={20} aria-hidden="true" /></summary><p>{a}</p></details>)}</div>
+        <button className="text-link faq-ask" type="button" onClick={() => ask('', true)}>Задать вопрос мастеру<ArrowUpRight size={18} aria-hidden="true" /></button>
       </section>
 
       <section className="contact section" id="contacts">

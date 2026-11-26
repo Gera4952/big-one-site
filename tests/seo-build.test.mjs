@@ -45,12 +45,15 @@ test('service pages have crawlable content, linked prices and a consultation but
   assert.ok(routes.length >= 18);
   assert.doesNotMatch(catalog, /class="lead-form"/);
   assert.doesNotMatch(home, /class="lead-form"/);
+  assert.match(home, /<summary>Сколько будет стоить ремонт\?/);
+  assert.match(home, /"@type":"Question","name":"Сколько будет стоить ремонт\?"/);
   assert.ok(home.indexOf('id="prices"') < home.indexOf('id="promo"'));
   for (const route of routes) {
     const html = await read(route);
     assert.match(html, /class="direction-lead"/, route);
     const photo = html.match(/<figure class="direction-photo"><img src="\/(assets\/[^"]+\.webp)"/);
     assert.ok(photo, `${route} must have a service image`);
+    assert.doesNotMatch(html, /Иллюстрация к услуге/, route);
     assert.ok((await readFile(path.join(root, photo[1]))).length > 0, photo[1]);
     assert.match(html, /href="#direction-prices"/, route);
     assert.match(html, /id="direction-prices"/, route);

@@ -44,8 +44,10 @@ export function FullPriceList({ onSelect }) {
     </div>
     <p className="price-count" role="status">{terms.length ? 'Найдено работ' : 'Работ в прайсе'}: {count}</p>
     <div className="price-categories">{categories.map(category => <section className="price-category" id={category.id} key={category.id}>
-      <h2>{category.name}{category.from > 0 && <small>от {category.from.toLocaleString('ru-RU')} ₽</small>}</h2>
-      <div className="catalog-links"><a className="text-link" href={BASE + category.path} aria-label={`Об услуге «${category.name}»`}>Об услуге<ArrowRight size={16} /></a></div>
+      <h2>
+        <a className="catalog-direction-link" href={BASE + category.path}><span>{category.name}</span><ArrowUpRight size={16} aria-hidden="true" /></a>
+        {category.from > 0 && <small>от {category.from.toLocaleString('ru-RU')} ₽</small>}
+      </h2>
       <details className="price-expander" open={terms.length > 0}>
         <summary>Работы и цены · {rowsOf(category).length}<CaretDown size={17} aria-hidden="true" /></summary>
         <PriceRows groups={category.groups} category={category.name} onSelect={onSelect} />
@@ -82,7 +84,6 @@ export function DirectionPrices({ direction, onSelect, contact }) {
       </div>
       <figure className="direction-photo">
         <img src={`${BASE}assets/${media.file}`} width={512} height={320} alt={media.alt} decoding="async" />
-        {!direction.photo && <figcaption>Иллюстрация к услуге</figcaption>}
       </figure>
     </header>
     <div className="direction-content">
