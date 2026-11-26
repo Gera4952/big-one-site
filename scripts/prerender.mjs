@@ -3,7 +3,7 @@
    the home page, the full price list and one page per direction, each with its own title,
    description, canonical address and structured data; then writes sitemap.xml and robots.txt.
    Every address comes from site.json → siteUrl, so moving to another domain is one edit there. */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -29,17 +29,17 @@ const allRows = catalog.categories.flatMap(category => category.groups.flatMap(g
 function page({ file, route, title, description, ld = [] }) {
   const url = siteUrl + file.replace(/(^|\/)index\.html$/, '');
   let html = template
-    .replace(/<title>[^<]*<\/title>/, `<title>${escape(title)}</title>`)
-    .replace(/(<meta name="description" content=")[^"]*/, `$1${escape(description)}`)
-    .replace(/(<meta property="og:title" content=")[^"]*/, `$1${escape(title)}`)
-    .replace(/(<meta property="og:description" content=")[^"]*/, `$1${escape(description)}`)
-    .replace(/(<link rel="canonical" href=")[^"]*/, `$1${url}`)
-    .replace(/(<meta property="og:url" content=")[^"]*/, `$1${url}`)
-    .replace('</head>', `${ld.map(jsonLd).join('')}</head>`);
+    .replace(/<title>[^<]*<\/title>/, () => `<title>${escape(title)}</title>`)
+    .replace(/(<meta name="description" content=")[^"]*/, (_, start) => start + escape(description))
+    .replace(/(<meta property="og:title" content=")[^"]*/, (_, start) => start + escape(title))
+    .replace(/(<meta property="og:description" content=")[^"]*/, (_, start) => start + escape(description))
+    .replace(/(<link rel="canonical" href=")[^"]*/, (_, start) => start + escape(url))
+    .replace(/(<meta property="og:url" content=")[^"]*/, (_, start) => start + escape(url))
+    .replace('</head>', () => `${ld.map(jsonLd).join('')}</head>`);
   const body = render(base + route);
   if (body.length < 2000) throw new Error(`Prerender of ${file} produced almost no content`);
   // data-page says which page this file is, so it opens correctly under any address (/prices, /prices.html, a builder's own URL).
-  html = html.replace('<div id="root"></div>', `<div id="root" data-page="${escape(base + route)}">${body}</div>`);
+  html = html.replace('<div id="root"></div>', () => `<div id="root" data-page="${escape(base + route)}">${body}</div>`);
   const target = path.join(client, file);
   mkdirSync(path.dirname(target), { recursive: true });
   writeFileSync(target, html);
@@ -53,8 +53,7 @@ const offers = (name, rows) => ({ '@context': 'https://schema.org', '@type': 'Of
 })) });
 
 const phone = '8 916 098 18 91';
-const tyres = directions.find(direction => direction.slug === 'shinomontazh');
-const highlights = [['ТО', priceOf('Техническое обслуживание')], ['диагностика', priceOf('Диагностика')], ['шиномонтаж', tyres?.from && `от ${tyres.from.toLocaleString('ru-RU')} ₽`]].filter(([, p]) => p).map(([n, p]) => `${n} ${p}`).join(', ');
+const highlights = [['ТО', priceOf('Техническое обслуживание')], ['диагностика', priceOf('Диагностика')]].filter(([, p]) => p).map(([n, p]) => `${n} ${p}`).join(', ');
 const urls = [];
 urls.push(page({
   file: 'index.html', route: '',
@@ -69,16 +68,15 @@ urls.push(page({
   ld: [breadcrumbs([['Главная', siteUrl], ['Цены', siteUrl + 'prices.html']])],
 }));
 for (const direction of directions) {
-  const category = catalog.categories.find(item => item.id === direction.id);
   urls.push(page({
     file: direction.path, route: direction.path, title: direction.title, description: direction.description,
-    ld: [breadcrumbs([['Главная', siteUrl], ['Цены', siteUrl + 'prices.html'], [direction.name, siteUrl + direction.path]]), offers(direction.name, category.groups.flatMap(group => group.rows))],
+    ld: [breadcrumbs([['Главная', siteUrl], ['Цены', siteUrl + 'prices.html'], [direction.name, siteUrl + direction.path]]), offers(direction.name, direction.groups.flatMap(group => group.rows))],
   }));
 }
 
-const today = new Date().toISOString().slice(0, 10);
-writeFileSync(path.join(client, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((loc, i) => `  <url><loc>${loc}</loc><lastmod>${today}</lastmod><priority>${i === 0 ? '1.0' : i === 1 ? '0.9' : '0.7'}</priority></url>`).join('\n')}\n</urlset>\n`);
-writeFileSync(path.join(client, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: ${base}api/\n\nSitemap: ${siteUrl}sitemap.xml\n`);
+writeFileSync(path.join(client, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(loc => `  <url><loc>${escape(loc)}</loc></url>`).join('\n')}\n</urlset>\n`);
+writeFileSync(path.join(client, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: ${base}api/\nClean-param: utm_source&utm_medium&utm_campaign&utm_term&utm_content&yclid\nClean-param: q ${base}prices.html\n\nSitemap: ${siteUrl}sitemap.xml\n`);
+if (base === '/') copyFileSync(path.join(root, 'deploy', 'apache.htaccess'), path.join(client, '.htaccess'));
 // The 404 page is plain HTML: point its links at the current base path.
 const notFound = path.join(client, '404.html');
 if (existsSync(notFound)) {

@@ -326,7 +326,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
           <h1><small className="eyebrow">Автосервис на Соколиной Горе</small>Ремонт и обслуживание <span>любых автомобилей</span></h1>
           <p className="hero-intro">Берём машины любых марок. Делаем ТО, находим причину поломки и чиним — от колодок до двигателя.</p>
           <div className="hero-actions">
-            <button className="button primary" onClick={() => ask()}>Узнать стоимость<ArrowUpRight size={20} /></button>
+            <button className="button primary" onClick={() => ask('', true)}>Консультация<ArrowUpRight size={20} /></button>
             <a className="button secondary" href={phone}><Phone size={20} />Позвонить</a>
           </div>
           <a className="hero-address" href={maps} target="_blank" rel="noreferrer"><MapPin size={20} /><span>{address}<OpenStatus /></span><ArrowUpRight size={16} /></a>

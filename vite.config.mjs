@@ -28,7 +28,9 @@ function structuredData() {
       if (site.rating) data.aggregateRating = { "@type": "AggregateRating", ratingValue: site.rating.value, reviewCount: site.rating.count };
       // Absolute addresses for link previews and search engines; site.siteUrl changes with the domain.
       const url = (process.env.SITE_URL || site.siteUrl || "https://envacrm.ru/big-site/").replace(/\/?$/, "/");
+      data['@id'] = `${url}#garage`;
       data.url = url; data.image = `${url}og-image.jpg`;
+      data.sameAs = [data.hasMap, ...profiles];
       const base = process.env.SITE_BASE_PATH || "/big-site/";
       // Ownership codes from Yandex Webmaster and Google Search Console, when set in site.json.
       const verification = [["yandex-verification", site.yandexVerification], ["google-site-verification", site.googleVerification]]

@@ -10,6 +10,7 @@
     "pack:html": "SITE_BASE_PATH=/ npm run build && node scripts/pack-html.mjs",
     "preview": "vite preview",
     "test:sites": "node --test tests/sites-worker.test.mjs",
+    "test:seo": "node --test tests/seo-build.test.mjs",
     "start": "node server/app.mjs",
     "test": "node --test tests/mail.test.mjs"
   },

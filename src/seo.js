@@ -5,7 +5,7 @@ import catalog from './data/services.json';
 const AREA = 'на Соколиной Горе';
 // Category ids come from the original price list (services.json); the slug is the page address.
 const DIRECTIONS = {
-  'modal-412249': { slug: 'shinomontazh', h1: `Шиномонтаж и балансировка ${AREA}`, about: 'Комплекс на 4 колеса и замена готового комплекта с балансировкой, R13–R22, отдельные операции и ремонт колёс: легковые автомобили, кроссоверы, внедорожники и микроавтобусы.' },
+  'modal-412249': { slug: 'shinomontazh', h1: `Шиномонтаж и балансировка ${AREA}`, snippet: 'Комплекс на 4 колеса, балансировка и ремонт шин. Цены по диаметру для легковых авто и кроссоверов.', about: 'Комплекс на 4 колеса и замена готового комплекта с балансировкой, R13–R22, отдельные операции и ремонт колёс: легковые автомобили, кроссоверы, внедорожники и микроавтобусы.' },
   'modal-412311': { slug: 'peretyazhka-salona', h1: `Перетяжка салона ${AREA}`, about: 'Руль, ручка АКПП, подлокотник, торпеда, потолок, сиденья и дверные карты — для автомобилей эконом, среднего и большого класса.' },
   'modal-412318': { slug: 'remont-dvigatelya', h1: `Ремонт двигателя ${AREA}`, about: 'Ремень и цепь ГРМ, прокладки, головка блока, маслосъёмные колпачки, замер компрессии и регулировка клапанов.' },
   'modal-412319': { slug: 'otoplenie-i-ohlazhdenie', h1: `Ремонт отопления и охлаждения ${AREA}`, about: 'Радиатор и вентилятор печки, радиатор охлаждения, помпа, термостат и патрубки.' },
@@ -25,16 +25,34 @@ const rub = (n) => `${n.toLocaleString('ru-RU')} ₽`;
 /* "1 работа", "24 работы", "233 работы", "36 работ" */
 export const works = (n) => { const a = n % 10, b = n % 100; return `${n} ${a === 1 && b !== 11 ? 'работа' : a >= 2 && a <= 4 && (b < 12 || b > 14) ? 'работы' : 'работ'}`; };
 
-export const directions = catalog.categories.filter(category => DIRECTIONS[category.id]).map(category => {
+const categoriesWithPages = catalog.categories.filter(category => DIRECTIONS[category.id]).map(category => {
   const meta = DIRECTIONS[category.id], from = minPrice(category), count = rowsOf(category).length;
   const short = meta.h1.replace(` ${AREA}`, '');
   return {
-    id: category.id, name: category.name, slug: meta.slug, h1: meta.h1, about: meta.about, from, count,
+    id: category.id, name: category.name, slug: meta.slug, h1: meta.h1, about: meta.about, from, count, groups: category.groups,
     path: `uslugi/${meta.slug}.html`,
-    title: `${short} — цены${from ? ` от ${rub(from)}` : ''} | The Big One Garage, Соколиная Гора`,
-    description: `${short} в автосервисе The Big One Garage на Соколиной Горе, Москва. ${works(count)} с ценами${from ? ` от ${rub(from)}` : ''}. ${meta.about} Запись: 8 916 098 18 91.`,
+    title: `${meta.h1} — цены | Big One Garage`,
+    description: `${short} на Соколиной Горе в Москве. ${meta.snippet || meta.about}`,
   };
 });
+
+const featured = [
+  { slug: 'tehnicheskoe-obsluzhivanie', serviceId: 'modal-412248', h1: `ТО автомобиля ${AREA}`,
+    about: 'На ТО меняем масло и фильтры, проверяем тормоза и согласовываем с вами список работ. Состав обслуживания зависит от пробега, регламента производителя и состояния машины.' },
+  { slug: 'diagnostika-avtomobilya', serviceId: 'modal-412250', h1: `Диагностика автомобиля ${AREA}`,
+    about: 'Если машина шумит, плохо заводится или загорелся индикатор на панели, опишите симптомы. Начнём с проверки нужных систем и согласуем ремонт, когда найдём причину.' },
+].map(({ slug, serviceId, h1, about }) => {
+  const service = catalog.services.find(item => item.sourceId === serviceId);
+  return { id: serviceId, name: service.name, slug, h1, about, path: `uslugi/${slug}.html`,
+    title: `${h1} — ${service.price} | Big One Garage`,
+    description: `${h1}, Москва. Цена ${service.price}. ${about}`,
+    groups: [{ name: '', rows: [{ name: service.name, price: service.price }] }],
+    from: amount(service.price),
+  };
+});
+
+export const directions = [...categoriesWithPages, ...featured];
+export const featuredDirections = featured;
 export const directionBySlug = (slug) => directions.find(direction => direction.slug === slug);
 export const directionById = (id) => directions.find(direction => direction.id === id);
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, ArrowRight, CaretDown, MagnifyingGlass, X } from '@phosphor-icons/react';
 import catalog from '../data/services.json';
-import { directions, directionById, works } from '../seo.js';
+import { directions, directionById, featuredDirections, works } from '../seo.js';
 import '../price-page.css';
 
 const BASE = import.meta.env.BASE_URL;
@@ -14,6 +14,12 @@ export const fromPrice = (category) => {
   return values.length ? `от ${Math.min(...values).toLocaleString('ru-RU')} ₽` : '';
 };
 const total = catalog.categories.reduce((n, category) => n + rowsOf(category).length, 0);
+
+function FeaturedPriceLinks() {
+  return <nav className="featured-price-links" aria-label="ТО и диагностика">
+    {featuredDirections.map(direction => <a className="text-link" key={direction.id} href={`${BASE}${direction.path}`}>{direction.name}<ArrowRight size={16} /></a>)}
+  </nav>;
+}
 
 export function PriceRows({ groups, category, onSelect }) {
   return <div className="price-groups">{groups.map((group, i) => <div className="price-group" key={`${group.name}-${i}`}>
@@ -40,6 +46,7 @@ export function PricePreview() {
     })}</div>
     {!all && catalog.categories.length > 6 && <button type="button" className="price-more" onClick={() => setAll(true)}>Ещё {catalog.categories.length - 6} {catalog.categories.length - 6 === 1 ? 'направление' : catalog.categories.length - 6 < 5 ? 'направления' : 'направлений'}<CaretDown size={18} /></button>}
     <a className="button secondary price-all" href={`${BASE}prices.html`}>Открыть весь прайс<ArrowUpRight size={18} /></a>
+    <FeaturedPriceLinks />
     <p className="price-note">Цена зависит от машины и объёма работ. Точную сумму назовём до начала ремонта.</p>
   </div>;
 }
@@ -58,6 +65,7 @@ export function FullPriceList({ onSelect, callback }) {
     <p className="eyebrow">Автосервис на Соколиной Горе</p>
     <h1>Цены на ремонт и обслуживание</h1>
     <p className="section-intro">Найдите нужную работу и нажмите на неё — перезвоним и скажем точную цену для вашей машины.</p>
+    <FeaturedPriceLinks />
     <div className="price-tools">
       <label className="price-search"><MagnifyingGlass size={20} /><span className="sr-only">Поиск по работам</span>
         <input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Например: колодки, ГРМ, R 16" />
@@ -70,7 +78,7 @@ export function FullPriceList({ onSelect, callback }) {
       <h2><a href={`${BASE}${directionById(category.id)?.path || ''}`}>{category.name}</a><small>{fromPrice(category)}</small></h2>
       <PriceRows groups={category.groups} category={category.name} onSelect={onSelect} />
     </section>)}</div>
-    {!count && <div className="price-empty"><p>Такой работы в прайсе нет. Расскажите, что нужно сделать, — скажем, возьмёмся ли и сколько это будет стоить.</p><button className="button primary" onClick={() => onSelect(query)}>Узнать стоимость<ArrowUpRight size={18} /></button></div>}
+    {!count && <div className="price-empty"><p>Такой работы в прайсе нет. Расскажите, что нужно сделать, — скажем, возьмёмся ли и сколько это будет стоить.</p><button className="button primary" onClick={() => onSelect(query, true)}>Консультация<ArrowUpRight size={18} /></button></div>}
     {callback}
     <p className="price-note">Точную сумму назовём для вашей машины до начала ремонта.</p>
   </section>;
@@ -79,17 +87,16 @@ export function FullPriceList({ onSelect, callback }) {
 /* A direction of the price list as its own page: heading with the area, short description,
    all its prices, and links to the other directions. */
 export function DirectionPrices({ direction, onSelect, callback }) {
-  const category = catalog.categories.find(item => item.id === direction.id);
   return <section className="price-page wrap" id="prices">
     <nav className="breadcrumbs" aria-label="Навигация"><a href={BASE}>Главная</a><span aria-hidden="true">/</span><a href={`${BASE}prices.html`}>Цены</a><span aria-hidden="true">/</span><span aria-current="page">{direction.name}</span></nav>
     <h1>{direction.h1}</h1>
     <p className="section-intro">{direction.about}</p>
     <div className="direction-actions">
-      <button className="button primary" onClick={() => onSelect(direction.name)}>Узнать стоимость<ArrowUpRight size={20} /></button>
-      <span className="direction-summary">{works(direction.count)}{direction.from ? ` · от ${direction.from.toLocaleString('ru-RU')} ₽` : ''}</span>
+      <button className="button primary" onClick={() => onSelect(direction.name, true)}>Консультация<ArrowUpRight size={20} /></button>
+      <span className="direction-summary">{direction.count ? works(direction.count) : ''}{direction.from ? `${direction.count ? ' · ' : ''}от ${direction.from.toLocaleString('ru-RU')} ₽` : ''}</span>
     </div>
     <div className="price-categories"><section className="price-category">
-      <PriceRows groups={category.groups} category={category.name} onSelect={onSelect} />
+      <PriceRows groups={direction.groups} category={direction.count ? direction.name : ''} onSelect={onSelect} />
     </section></div>
     {callback}
     <p className="price-note">Цены «от» — минимальные. Точную сумму для вашей машины назовём до начала ремонта.</p>
