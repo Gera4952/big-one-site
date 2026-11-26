@@ -29,3 +29,5 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - 2026-11-16 portability: the site is self-contained and may move to any host. Leads go straight to the CRM «Заявки» (`site.json → leadsUrl`, CRM `POST /api/leads/site`, any origin allowed by default); with `leadsUrl: null` they go to the optional Node mail server in `server/`. Never import CRM code; the only link to the CRM is that URL.
 
 - Mobile layout uses readable text, quiet separators and clear actions for prices and contact. Prefer plain lists over repeated card grids, and keep decorative labels and effects out of the reading flow.
+
+- New service illustrations show recognizable vehicle details or parts at rest, with no people or depicted repair procedures. Label generated images as illustrations and use the actual workshop photos where they fit.

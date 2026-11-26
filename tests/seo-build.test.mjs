@@ -49,6 +49,9 @@ test('service pages have crawlable content, linked prices and a consultation but
   for (const route of routes) {
     const html = await read(route);
     assert.match(html, /class="direction-lead"/, route);
+    const photo = html.match(/<figure class="direction-photo"><img src="\/(assets\/[^"]+\.webp)"/);
+    assert.ok(photo, `${route} must have a service image`);
+    assert.ok((await readFile(path.join(root, photo[1]))).length > 0, photo[1]);
     assert.match(html, /href="#direction-prices"/, route);
     assert.match(html, /id="direction-prices"/, route);
     assert.match(html, /Консультация/, route);

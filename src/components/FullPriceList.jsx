@@ -63,13 +63,14 @@ export function DirectionPrices({ direction, onSelect, contact }) {
   const priceList = useRef(null);
   const rows = rowsOf(direction);
   const related = direction.related.map(directionBySlug);
+  const media = direction.photo || { file: `service-${direction.image}.webp`, alt: '' };
   const consult = () => onSelect(direction.name, true);
   return <article className="price-page direction-page wrap">
     <nav className="breadcrumbs" aria-label="Хлебные крошки">
       <a href={BASE}>Главная</a><span aria-hidden="true">/</span><a href={`${BASE}prices.html`}>Все услуги</a>
       <span className="breadcrumb-current-separator" aria-hidden="true">/</span><span aria-current="page">{direction.name}</span>
     </nav>
-    <header className={`direction-hero${direction.image ? ' has-image' : ''}`}>
+    <header className="direction-hero">
       <div>
         <p className="direction-location"><MapPin size={16} aria-hidden="true" />Москва, Соколиная Гора</p>
         <h1>{direction.h1}</h1>
@@ -79,7 +80,10 @@ export function DirectionPrices({ direction, onSelect, contact }) {
           <a className="button secondary" href="#direction-prices" onClick={() => { if (priceList.current) priceList.current.open = true; }}>Смотреть цены</a>
         </div>
       </div>
-      {direction.image && <img className="direction-photo" src={`${BASE}assets/service-${direction.image}.webp`} width={512} height={320} alt="" decoding="async" />}
+      <figure className="direction-photo">
+        <img src={`${BASE}assets/${media.file}`} width={512} height={320} alt={media.alt} decoding="async" />
+        {!direction.photo && <figcaption>Иллюстрация к услуге</figcaption>}
+      </figure>
     </header>
     <div className="direction-content">
       <section>
