@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useId } from 'react';
-import { ArrowUpRight, ArrowRight, Phone, MapPin, List, X, CheckCircle, CaretDown, MagnifyingGlass, ChatCircleDots, WhatsappLogo, TelegramLogo, Star, Clock, ShieldCheck, Eye, Handshake, CreditCard, MapTrifold, ListChecks, Wrench, PencilSimple, Drop, Gift } from '@phosphor-icons/react';
+import { ArrowUpRight, ArrowRight, Phone, MapPin, List, X, CheckCircle, CaretDown, MagnifyingGlass, ChatCircleDots, WhatsappLogo, TelegramLogo, Star, Clock, ShieldCheck, Eye, Handshake, CreditCard, MapTrifold, ListChecks, Wrench, PencilSimple } from '@phosphor-icons/react';
 import { FullPriceList, DirectionPrices } from './components/FullPriceList.jsx';
 import { PersonalData } from './components/PersonalData.jsx';
 import { consentVersion, personalDataPages } from './personal-data.js';
@@ -45,6 +45,10 @@ function Photo({ name, full, width, height, sizes = '100vw', alt, className = ''
     <source type="image/webp" srcSet={set('webp')} sizes={sizes} />
     <img src={`${BASE}assets/${name}-${full}.jpg`} srcSet={set('jpg')} sizes={sizes} width={width} height={height} alt={alt} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : 'auto'} decoding="async" />
   </picture>;
+}
+
+function Brand() {
+  return <a className="brand" href={BASE}><img src={`${BASE}assets/big-one-garage-logo.webp`} alt="The Big One Garage" width={299} height={170} /></a>;
 }
 
 function Messengers({ className = '' }) {
@@ -219,16 +223,15 @@ function ChoiceChips({ label, options, value, onChange }) {
 function Promo({ promo, onAsk }) {
   return <section className="promo wrap" id="promo" aria-labelledby="promo-title">
     <div className="promo-card">
-      <span className="promo-icon" aria-hidden="true"><Drop size={26} weight="fill" /><Gift size={18} weight="fill" /></span>
       <div className="promo-copy">
         {promo.eyebrow && <small className="eyebrow">{promo.eyebrow}</small>}
         <h2 id="promo-title">{promo.title}</h2>
         {promo.text && <p>{promo.text}</p>}
-        {promo.free && <p className="promo-price">{promo.was && <s>{promo.was}</s>}<b>0 ₽</b><span>{promo.free}</span></p>}
+        {promo.was && promo.free && <p className="promo-price"><s>{promo.was}</s><b>0 ₽</b><span>{promo.free}</span></p>}
         {promo.note && <small className="promo-note">{promo.note}</small>}
       </div>
       <div className="promo-actions">
-        <button className="button primary" onClick={() => onAsk(promo.service || promo.title)}>{promo.button || 'Записаться'}<ArrowUpRight size={20} /></button>
+        <button className="button secondary" type="button" onClick={() => onAsk(promo.service || promo.title)}>{promo.button || 'Записаться'}<ArrowUpRight size={20} /></button>
       </div>
     </div>
   </section>;
@@ -248,14 +251,13 @@ function Reviews() {
     <div className="reviews-panel">
       <div className="reviews-summary">
         {site.rating ? <div className="reviews-score"><b>{ratingText}</b><span className="stars" aria-label={`Рейтинг ${ratingText} из 5`}>{[0, 1, 2, 3, 4].map(i => <Star key={i} size={22} weight={i < Math.round(site.rating.value) ? 'fill' : 'regular'} />)}</span><small>{site.rating.count} {reviewWord(site.rating.count)}</small></div>
-          : <div className="reviews-score is-empty" aria-hidden="true"><ChatCircleDots size={34} /></div>}
+          : null}
         <div className="reviews-copy">
           <h3>Отзывы на Яндекс Картах</h3>
-          <p>Отзывы о ремонте и обслуживании в нашем сервисе.</p>
         </div>
         <div className="reviews-buttons">
-          <button type="button" className="button primary" aria-expanded={open} aria-controls="reviews-widget" onClick={() => setOpen(value => !value)}>{open ? 'Свернуть отзывы' : 'Читать отзывы'}<CaretDown size={18} className={open ? 'is-flipped' : ''} /></button>
-          <a className="button secondary" href={`${maps}reviews/?add-review=true`} target="_blank" rel="noreferrer"><PencilSimple size={18} />Оставить отзыв</a>
+          <button type="button" className="button secondary" aria-expanded={open} aria-controls="reviews-widget" onClick={() => setOpen(value => !value)}>{open ? 'Свернуть отзывы' : 'Читать отзывы'}<CaretDown size={18} className={open ? 'is-flipped' : ''} /></button>
+          <a className="text-link" href={`${maps}reviews/?add-review=true`} target="_blank" rel="noreferrer"><PencilSimple size={18} />Оставить отзыв</a>
         </div>
       </div>
       {site.quotes?.length > 0 && <div className="quotes">{site.quotes.map(quote => <figure className="quote" key={quote.text}><blockquote>«{quote.text}»</blockquote><figcaption>{quote.author} · Яндекс Карты</figcaption></figure>)}</div>}
@@ -270,35 +272,48 @@ function Reviews() {
 export function App({ path = typeof location === 'undefined' ? BASE : location.pathname }) {
   const page = pageOf(path), home = page.type === 'home';
   const [menu, setMenu] = useState(false), [modal, setModal] = useState(null);
+  const navigation = useRef(null);
+  const menuButton = useRef(null);
+  useEffect(() => {
+    if (menu) navigation.current.querySelector('a')?.focus();
+  }, [menu]);
+  const closeMenuOnEscape = (event) => {
+    if (event.key !== 'Escape' || !menu) return;
+    setMenu(false);
+    menuButton.current?.focus();
+  };
   const ask = (service = '', consultation = false) => { setMenu(false); setModal({ service, consultation }); window.dispatchEvent(new CustomEvent('bigone:lead-open', { detail: { service } })); };
   const nav = [['#reviews', 'Отзывы'], ['#about', 'Как работаем'], ['#contacts', 'Контакты']];
   return <>
     <a className="skip" href="#main">Перейти к содержанию</a>
-    <header className="header">
-      <a className="brand" href={BASE}>The Big One <span>Garage</span></a>
-      <nav id="site-navigation" aria-label="Основная навигация" className={menu ? 'open' : ''}>
-        <a href={`${BASE}prices.html`} aria-current={page.type === 'prices' ? 'page' : undefined} onClick={() => setMenu(false)}>Услуги и цены</a>
-        {nav.map(([hash, label]) => <a key={hash} href={`${home ? '' : BASE}${hash}`} onClick={() => setMenu(false)}>{label}</a>)}
-      </nav>
-      <a className="header-phone" href={phone} aria-label={`Позвонить: ${phoneLabel}`}><Phone size={20} /><span>{phoneLabel}</span></a>
-      <button className="menu-toggle icon-button" aria-label={menu ? 'Закрыть меню' : 'Открыть меню'} aria-expanded={menu} aria-controls="site-navigation" onClick={() => setMenu(!menu)}>{menu ? <X size={24} /> : <List size={24} />}</button>
+    <header className="header" onKeyDown={closeMenuOnEscape}>
+      <div className="header-inner wrap">
+        <Brand />
+        <nav ref={navigation} id="site-navigation" aria-label="Основная навигация" className={menu ? 'open' : ''}>
+          <a href={`${BASE}prices.html`} aria-current={page.type === 'prices' ? 'page' : undefined} onClick={() => setMenu(false)}>Услуги и цены</a>
+          {nav.map(([hash, label]) => <a key={hash} href={`${home ? '' : BASE}${hash}`} onClick={() => setMenu(false)}>{label}</a>)}
+        </nav>
+        <a className="header-phone" href={phone} aria-label={`Позвонить: ${phoneLabel}`}><Phone size={20} /><span>{phoneLabel}</span></a>
+        <button ref={menuButton} className="menu-toggle icon-button" type="button" aria-label={menu ? 'Закрыть меню' : 'Открыть меню'} aria-expanded={menu} aria-controls="site-navigation" onClick={() => setMenu(!menu)}>{menu ? <X size={24} /> : <List size={24} />}</button>
+      </div>
     </header>
 
     <main id="main">{page.type === 'legal' ? <PersonalData document={page.document} />
       : page.type === 'prices' ? <FullPriceList onSelect={ask} />
       : page.type === 'direction' ? <DirectionPrices direction={page.direction} onSelect={ask} contact={contact} /> : <>
-      <section className="hero">
-        <Photo className="hero-photo" name="hero" full={1254} width={1254} height={1254} sizes="(max-width: 760px) 100vw, 50vw" alt="Механик за работой в автомобильной мастерской — иллюстрация" priority />
+      <section className="hero wrap">
         <div className="hero-copy">
           {site.rating && <a className="hero-rating" href="#reviews"><Star size={18} weight="fill" /><b>{ratingText}</b><span>{site.rating.count} {reviewWord(site.rating.count)} на Яндекс Картах</span></a>}
-          <h1><small className="eyebrow">Автосервис на Соколиной Горе</small>Ремонт и обслуживание <span>автомобилей</span></h1>
-          <p className="hero-intro">Делаем ТО, ремонтируем подвеску, тормоза и двигатель, варим пороги и днище. Работаем с автомобилями любых марок.</p>
+          <p className="hero-location">Автосервис на Соколиной Горе</p>
+          <h1>Ремонт и обслуживание автомобилей</h1>
+          <p className="hero-intro">ТО, диагностика, ремонт и сварка кузова. Работаем с автомобилями любых марок.</p>
           <div className="hero-actions">
             <button className="button primary" onClick={() => ask('', true)}>Консультация<ArrowUpRight size={20} /></button>
-            <a className="button secondary" href={phone}><Phone size={20} />Позвонить</a>
+            <a className="button secondary" href={`${BASE}prices.html`}>Услуги и цены</a>
           </div>
           <a className="hero-address" href={maps} target="_blank" rel="noreferrer"><MapPin size={20} /><span>{address}<OpenStatus /></span><ArrowUpRight size={16} /></a>
         </div>
+        <Photo className="hero-photo" name="hero" full={1254} width={1254} height={1254} sizes="(max-width: 759px) calc(100vw - 32px), (max-width: 1300px) 50vw, 620px" alt="Механик за работой в автомобильной мастерской — иллюстрация" priority />
       </section>
 
       <section className="services wrap section" id="prices">
@@ -306,7 +321,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
         <form className="finder-search" action={`${BASE}prices.html`} method="get" role="search">
           <MagnifyingGlass size={20} /><label className="sr-only" htmlFor="finder-q">Найти работу и цену</label>
           <input id="finder-q" name="q" type="search" placeholder="Колодки, ГРМ, R16…" enterKeyHint="search" />
-          <button className="button primary" type="submit">Найти</button>
+          <button className="button secondary" type="submit">Найти</button>
         </form>
         <div className="service-grid">{mainServices.map(({ id, title, text, image }) => <a className="service-card" key={id} href={directionLink(id)}>
           <img src={`${BASE}assets/service-${image}.webp`} width={512} height={320} alt="" loading="lazy" decoding="async" />
@@ -331,12 +346,17 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
 
       <section className="about section" id="about">
         <div className="wrap">
-          <Heading title="Как проходит ремонт" />
-          <div className="about-photos">
-            <figure className="about-photo"><Photo name="workshop" full={1280} width={1280} height={853} sizes="(max-width: 760px) 86vw, 45vw" alt="Рабочая зона автосервиса: подъёмник, инструмент и автомобили в ремонте" /></figure>
-            <figure className="about-photo"><Photo name="body" full={1280} width={1280} height={853} sizes="(max-width: 760px) 86vw, 45vw" alt="Кузов автомобиля на подъёмнике во время кузовного ремонта" /></figure>
+          <section className="about-layout" id="masters" aria-labelledby="masters-title">
+            <div className="about-copy">
+              <h2 id="masters-title">Мастера с многолетним опытом</h2>
+              <p>В нашей команде мастера по диагностике, слесарному ремонту и кузовной сварке. Работаем с разными марками. Можно приехать на плановое ТО или обратиться со сложной неисправностью, которая проявляется время от времени.</p>
+            </div>
+            <figure className="about-photo"><Photo name="workshop" full={1280} width={1280} height={853} sizes="(max-width: 759px) calc(100vw - 32px), (max-width: 1300px) 50vw, 620px" alt="Рабочая зона автосервиса Big One Garage" /></figure>
+          </section>
+          <div className="repair-process">
+            <Heading title="Как проходит ремонт" />
+            <ol className="steps" role="list">{steps.map(([title, text], i) => <li key={title}><span className="step-number" aria-hidden="true">{i + 1}</span><div><h3>{title}</h3><p>{text}</p></div></li>)}</ol>
           </div>
-          <ol className="steps">{steps.map(([title, text], i) => <li key={title}><span className="step-number">{i + 1}</span><div><h3>{title}</h3><p>{text}</p></div></li>)}</ol>
         </div>
       </section>
 
@@ -369,7 +389,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
     </>}</main>
 
     <footer className="site-footer"><div className="wrap footer-grid">
-      <div className="footer-brand"><a href={BASE} className="brand">The Big One <span>Garage</span></a></div>
+      <div className="footer-brand"><Brand /></div>
       <div className="footer-col"><b>Контакты</b><a href={phone}>{phoneLabel}</a>{hoursText() && <span>{hoursText()}</span>}<a href={maps} target="_blank" rel="noreferrer">{address}</a><a href="mailto:thebigonegarage@bk.ru">thebigonegarage@bk.ru</a></div>
       <div className="footer-col"><b>Разделы</b><a href={`${BASE}prices.html`}>Все услуги</a>{nav.map(([hash, label]) => <a key={hash} href={`${home ? '' : BASE}${hash}`}>{label}</a>)}</div>
       {(whatsappUrl || telegramUrl || maxUrl || vkUrl) && <div className="footer-col"><b>Мы на связи</b>{whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer">WhatsApp</a>}{telegramUrl && <a href={telegramUrl} target="_blank" rel="noreferrer">Telegram</a>}{maxUrl && <a href={maxUrl} target="_blank" rel="noreferrer">MAX</a>}{vkUrl && <a href={vkUrl} target="_blank" rel="noreferrer">ВКонтакте</a>}<a href={`${maps}reviews/`} target="_blank" rel="noreferrer">Отзывы на Яндекс Картах</a></div>}
