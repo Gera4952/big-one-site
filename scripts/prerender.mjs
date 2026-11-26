@@ -48,30 +48,45 @@ function page({ file, route, title, description, ld = [] }) {
 }
 
 const breadcrumbs = (items) => ({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: items.map(([name, item], i) => ({ '@type': 'ListItem', position: i + 1, name, item })) });
-const offers = (name, rows) => ({ '@context': 'https://schema.org', '@type': 'OfferCatalog', name, itemListElement: rows.filter(row => amount(row.price)).map(row => ({
-  '@type': 'Offer', itemOffered: { '@type': 'Service', name: row.name },
-  priceSpecification: { '@type': 'PriceSpecification', priceCurrency: 'RUB', [String(row.price).includes('от') ? 'minPrice' : 'price']: amount(row.price) },
-})) });
+const serviceData = (direction) => ({
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  '@id': siteUrl + direction.path + '#service',
+  url: siteUrl + direction.path,
+  name: direction.h1,
+  description: direction.description,
+  provider: { '@id': siteUrl + '#garage' },
+  areaServed: { '@type': 'City', name: 'Москва' },
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: direction.name,
+    itemListElement: direction.groups.flatMap(group => group.rows.filter(row => amount(row.price)).map(row => ({
+      '@type': 'Offer',
+      itemOffered: { '@type': 'Service', name: [group.name.replace(/:\s*$/, ''), row.name].filter(Boolean).join(' — ') },
+      priceSpecification: { '@type': 'PriceSpecification', priceCurrency: 'RUB', [String(row.price).startsWith('от ') ? 'minPrice' : 'price']: amount(row.price) },
+    }))),
+  },
+});
 
 const phone = '8 916 098 18 91';
 const highlights = [['ТО', priceOf('Техническое обслуживание')], ['диагностика', priceOf('Диагностика')]].filter(([, p]) => p).map(([n, p]) => `${n} ${p}`).join(', ');
 const urls = [];
 urls.push(page({
   file: 'index.html', route: '',
-  title: 'Автосервис на Соколиной Горе — ремонт любых автомобилей | The Big One Garage',
-  description: `Ремонт и обслуживание автомобилей любых марок на Соколиной Горе, Москва: ${highlights}. ${works(allRows.length)} с ценами на сайте. Запись: ${phone}.`,
+  title: 'Автосервис на Соколиной Горе, Москва — The Big One Garage',
+  description: `ТО, сварка порогов и днища, диагностика и ремонт автомобилей на Соколиной Горе в Москве. ${highlights}. Телефон ${phone}.`,
   ld: [{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) }],
 }));
 urls.push(page({
   file: 'prices.html', route: 'prices.html',
   title: `Все услуги и цены — ${works(allRows.length)} | The Big One Garage, Соколиная Гора`,
-  description: `Прайс автосервиса The Big One Garage на Соколиной Горе: шиномонтаж, двигатель, подвеска, тормоза, электрика и другие работы — ${allRows.length} позиций с ценами. Запись: ${phone}.`,
+  description: `Прайс The Big One Garage в Москве. Найдите цены на ТО, шиномонтаж, сварку кузова, ремонт подвески, тормозов и двигателя. Телефон ${phone}.`,
   ld: [breadcrumbs([['Главная', siteUrl], ['Все услуги', siteUrl + 'prices.html']])],
 }));
 for (const direction of directions) {
   urls.push(page({
     file: direction.path, route: direction.path, title: direction.title, description: direction.description,
-    ld: [breadcrumbs([['Главная', siteUrl], ['Все услуги', siteUrl + 'prices.html'], [direction.name, siteUrl + direction.path]]), offers(direction.name, direction.groups.flatMap(group => group.rows))],
+    ld: [breadcrumbs([['Главная', siteUrl], ['Все услуги', siteUrl + 'prices.html'], [direction.name, siteUrl + direction.path]]), serviceData(direction)],
   }));
 }
 

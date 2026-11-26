@@ -37,3 +37,25 @@ test('each sitemap address has its own complete, indexable HTML document', async
     assert.ok((await read('index.html')).includes(`href="/uslugi/${route}.html"`));
   }
 });
+
+test('service pages have crawlable content, linked prices and a consultation button', async () => {
+  const catalog = await read('prices.html');
+  const home = await read('index.html');
+  const routes = [...new Set([...catalog.matchAll(/href="\/(uslugi\/[a-z0-9-]+\.html)"/g)].map(match => match[1]))];
+  assert.ok(routes.length >= 18);
+  assert.doesNotMatch(catalog, /class="lead-form"/);
+  assert.doesNotMatch(home, /class="lead-form"/);
+  assert.ok(home.indexOf('id="prices"') < home.indexOf('id="promo"'));
+  for (const route of routes) {
+    const html = await read(route);
+    assert.match(html, /class="direction-lead"/, route);
+    assert.match(html, /href="#direction-prices"/, route);
+    assert.match(html, /id="direction-prices"/, route);
+    assert.match(html, /Консультация/, route);
+    assert.match(html, /"@type":"Service"/, route);
+    assert.doesNotMatch(html, /class="lead-form"/, route);
+    const related = [...html.matchAll(/href="\/(uslugi\/[a-z0-9-]+\.html)"/g)];
+    assert.ok(related.length >= 2, route);
+    for (const [, target] of related) assert.ok(routes.includes(target), `${route} → ${target}`);
+  }
+});

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useId } from 'react';
+import { useEffect, useRef, useState, useId } from 'react';
 import { ArrowUpRight, ArrowRight, Phone, MapPin, List, X, CheckCircle, CaretDown, MagnifyingGlass, ChatCircleDots, WhatsappLogo, TelegramLogo, Star, Clock, ShieldCheck, Eye, Handshake, CreditCard, MapTrifold, ListChecks, Wrench, PencilSimple, Drop, Gift } from '@phosphor-icons/react';
 import { FullPriceList, DirectionPrices } from './components/FullPriceList.jsx';
 import { PersonalData } from './components/PersonalData.jsx';
@@ -14,6 +14,7 @@ const phone = 'tel:+79160981891';
 const phoneLabel = '8 916 098 18 91';
 const maps = 'https://yandex.ru/maps/org/the_big_one_garage/152908357603/';
 const address = 'Москва, 9-я улица Соколиной Горы, 8, стр. 11';
+const contact = { phone, phoneLabel, address, maps, hours: hoursText() };
 const mapWidget = 'https://yandex.ru/map-widget/v1/org/the_big_one_garage/152908357603/';
 const trustIcons = { shield: ShieldCheck, eye: Eye, handshake: Handshake, card: CreditCard, chat: ChatCircleDots, star: Star, list: ListChecks, wrench: Wrench, clock: Clock };
 /* Promises the site already makes (steps and form notes); owner-confirmed items from site.json are added after them. */
@@ -25,7 +26,7 @@ const baseTrust = [
 ];
 const mainServices = [
   { id: 'modal-412277', title: 'Сварка кузова', text: 'Пороги, днище и арки', image: 'welding' },
-  { id: 'modal-412248', title: 'Техобслуживание', text: 'Масло, фильтры и плановое ТО', image: 'maintenance' },
+  { id: 'modal-412248', title: 'Плановое ТО', text: 'Масло, фильтры и осмотр', image: 'maintenance' },
   { id: 'modal-412250', title: 'Диагностика', text: 'Поиск причины неисправности', image: 'diagnostics' },
   { id: 'modal-412249', title: 'Шиномонтаж', text: 'Замена шин и балансировка', image: 'tires' },
   { id: 'modal-412321', title: 'Ремонт подвески', text: 'Амортизаторы, рычаги и ступицы', image: 'suspension' },
@@ -34,10 +35,6 @@ const mainServices = [
 const visits = ['Сегодня', 'Завтра', 'На этой неделе', 'Пока только узнать цену'];
 const leadLabel = (...parts) => parts.filter(Boolean).join(' · ');
 const directionLink = (id) => `${BASE}${directionById(id)?.path || `prices.html#${id}`}`;
-const quickLinks = [
-  ['Шиномонтаж', directionLink('modal-412249')], ['Тормоза', directionLink('modal-412324')], ['Подвеска', directionLink('modal-412321')],
-  ['Двигатель', directionLink('modal-412318')], ['Электрика', directionLink('modal-413086')],
-];
 const ratingText = site.rating ? `${Number(site.rating.value).toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}` : null;
 const reviewWord = (n) => { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? 'отзыв' : a >= 2 && a <= 4 && (b < 12 || b > 14) ? 'отзыва' : 'отзывов'; };
 
@@ -68,23 +65,21 @@ function OpenStatus({ className = '' }) {
 }
 
 const problems = [
-  ['Пора на ТО', 'Масло, фильтры и плановое обслуживание.'],
-  ['Стучит, шумит или вибрирует', 'Найдём, откуда звук.'],
-  ['Горит ошибка или не заводится', 'Начнём с диагностики.'],
-  ['Плохо тормозит', 'Проверим тормоза и скажем, что менять.'],
-  ['Нужен шиномонтаж', 'Сезонная замена, балансировка, ремонт колёс.'],
+  ['Стучит на кочках', 'modal-412321'],
+  ['Горит Check Engine', 'modal-412250'],
+  ['Скрежет при торможении', 'modal-412324'],
+  ['Не заводится', 'modal-413086'],
 ];
-const unknownProblem = ['Не знаю, что случилось', 'Расскажите, как это проявляется, — подскажем, с чего начать.'];
 const steps = [
-  ['Вы рассказываете, что случилось', 'Своими словами, без технических терминов.'],
-  ['Мы находим причину и показываем её', 'Объясним, что сломалось и чем это грозит.'],
-  ['Договариваемся о цене и чиним', 'Без вашего согласия ничего лишнего не делаем.'],
+  ['Принимаем машину', 'Запишем жалобу и уточним, когда она проявляется.'],
+  ['Показываем, что нашли', 'Объясним, что нужно сделать сейчас и что можно отложить.'],
+  ['Согласуем работы и цену', 'Если появятся дополнительные работы, обсудим их с вами до ремонта.'],
 ];
 export const faq = [
   ['Нужно записываться заранее?', `Лучше да — тогда не придётся ждать${site.hours?.length ? `. Работаем ${hoursText().toLowerCase()}` : ''}. Позвоните или оставьте номер — подберём удобное время и скажем, сколько займёт ремонт.`],
   ['Вы чините мою марку?', 'Да. Берём машины любых марок и любого года выпуска.'],
   ['Можно узнать цену заранее?', 'Многие цены есть в прайсе на сайте. Точную сумму для вашей машины назовём после осмотра — иногда сначала нужна диагностика.'],
-  ['Заявка на сайте — это уже запись?', 'Нет, заявка ни к чему не обязывает. Мы перезвоним и ответим на вопросы, а время визита договоримся отдельно.'],
+  ['Заявка на сайте — это уже запись?', 'После заявки мы перезвоним, ответим на вопросы и договоримся о времени, если решите приехать.'],
   ['Можно приехать со своими запчастями?', 'Можно. Расскажите заранее, что у вас есть, — мастер скажет, подойдут ли они.'],
   ['Как вас найти?', `${address.replace('стр.', 'строение')}. Маршрут — в Яндекс Картах. Если не найдёте въезд, позвоните: ${phoneLabel}.`],
 ];
@@ -117,7 +112,6 @@ function Dialog({ title, children, onClose }) {
   return <>{!nativeDialog && <div className="dialog-backdrop" onClick={close} />}<dialog ref={ref} className={nativeDialog ? '' : 'dialog-fallback'} onCancel={e => { e.preventDefault(); close(); }} onClick={e => { if (e.target === ref.current) close(); }} aria-labelledby={titleId} aria-modal="true">
     <div className="dialog-content">
       <button className="close icon-button" onClick={close} aria-label="Закрыть"><X size={22} /></button>
-      <p className="eyebrow">The Big One Garage</p>
       <h2 id={titleId}>{title}</h2>
       {children}
     </div>
@@ -184,12 +178,12 @@ function useLead(service) {
   return { status, error, submit, setCaptchaToken, captchaAttempt, resetCaptcha };
 }
 
-function LeadForm({ service = '', consultation = false, submitLabel }) {
+function LeadForm({ service = '' }) {
   const [visit, setVisit] = useState('');
   const { status, error, submit, setCaptchaToken, captchaAttempt, resetCaptcha } = useLead(leadLabel(service, visit && `удобно: ${visit.toLowerCase()}`));
   if (status === 'success') return <div className="success" role="status"><CheckCircle size={36} weight="light" /><h3>Заявка отправлена</h3><p>Перезвоним по указанному номеру.</p><a href={phone}>Если вопрос срочный: {phoneLabel}</a></div>;
   return <form onSubmit={submit} className="lead-form">
-    {service && <p className="selected-service">Ваш запрос: {service}</p>}
+    {service && <p className="selected-service">{service}</p>}
     <div className="lead-fields-grid">
       <label>Имя<input name="name" autoComplete="given-name" maxLength={80} required /></label>
       <label>Телефон<PhoneInput label /></label>
@@ -209,16 +203,9 @@ function LeadForm({ service = '', consultation = false, submitLabel }) {
     </div>
     {captchaSiteKey && <LeadCaptcha siteKey={captchaSiteKey} onToken={setCaptchaToken} attempt={captchaAttempt} onRetry={resetCaptcha} />}
     <p className="form-error" role="alert">{error}</p>
-    <button className="button primary" disabled={status === 'sending'}>{status === 'sending' ? 'Отправляем…' : submitLabel || (consultation ? 'Проконсультироваться' : 'Отправить заявку')}<ArrowUpRight size={20} /></button>
-    <p className="form-note">{site.responseTime ? `${site.responseTime} ` : ''}Ни к чему не обязывает.</p>
+    <button className="button primary" disabled={status === 'sending'}>{status === 'sending' ? 'Отправляем…' : 'Отправить заявку'}<ArrowUpRight size={20} /></button>
+    <p className="form-note">{site.responseTime || 'Перезвоним, чтобы ответить на вопрос и согласовать визит.'}</p>
   </form>;
-}
-
-function Callback({ service = '', title = 'Не хотите заполнять форму?', text = 'Оставьте номер — перезвоним сами.' }) {
-  return <div className="callback">
-    {title && <div className="callback-copy"><b>{title}</b><p>{text}</p></div>}
-    <LeadForm service={service} submitLabel="Перезвоните мне" />
-  </div>;
 }
 
 /* Single-choice chips that behave as one radio group for screen readers and keyboards. */
@@ -248,7 +235,7 @@ function Promo({ promo, onAsk }) {
 }
 
 function Heading({ eyebrow, title, link }) {
-  return <div className="section-heading"><div><p className="eyebrow">{eyebrow}</p><h2>{title}</h2></div>{link}</div>;
+  return <div className="section-heading"><div>{eyebrow && <p className="eyebrow">{eyebrow}</p>}<h2>{title}</h2></div>{link}</div>;
 }
 
 /* `path` is passed when the page is prerendered at build time; in the browser it is the current address. */
@@ -257,14 +244,14 @@ function Heading({ eyebrow, title, link }) {
 function Reviews() {
   const [open, setOpen] = useState(false);
   return <section className="reviews section wrap" id="reviews">
-    <Heading eyebrow="Отзывы" title="Что о нас пишут" />
+    <Heading title="Отзывы клиентов" />
     <div className="reviews-panel">
       <div className="reviews-summary">
         {site.rating ? <div className="reviews-score"><b>{ratingText}</b><span className="stars" aria-label={`Рейтинг ${ratingText} из 5`}>{[0, 1, 2, 3, 4].map(i => <Star key={i} size={22} weight={i < Math.round(site.rating.value) ? 'fill' : 'regular'} />)}</span><small>{site.rating.count} {reviewWord(site.rating.count)}</small></div>
           : <div className="reviews-score is-empty" aria-hidden="true"><ChatCircleDots size={34} /></div>}
         <div className="reviews-copy">
           <h3>Отзывы на Яндекс Картах</h3>
-          <p>Их пишут наши клиенты. Почитайте перед визитом, а после ремонта расскажите, как всё прошло.</p>
+          <p>Отзывы о ремонте и обслуживании в нашем сервисе.</p>
         </div>
         <div className="reviews-buttons">
           <button type="button" className="button primary" aria-expanded={open} aria-controls="reviews-widget" onClick={() => setOpen(value => !value)}>{open ? 'Свернуть отзывы' : 'Читать отзывы'}<CaretDown size={18} className={open ? 'is-flipped' : ''} /></button>
@@ -284,29 +271,28 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
   const page = pageOf(path), home = page.type === 'home';
   const [menu, setMenu] = useState(false), [modal, setModal] = useState(null);
   const ask = (service = '', consultation = false) => { setMenu(false); setModal({ service, consultation }); window.dispatchEvent(new CustomEvent('bigone:lead-open', { detail: { service } })); };
-  const nav = [['problems', 'Что случилось'], ['prices', 'Услуги'], ['reviews', 'Отзывы'], ['about', 'Как работаем'], ['contacts', 'Контакты']];
+  const nav = [['#reviews', 'Отзывы'], ['#about', 'Как работаем'], ['#contacts', 'Контакты']];
   return <>
     <a className="skip" href="#main">Перейти к содержанию</a>
     <header className="header">
       <a className="brand" href={BASE}>The Big One <span>Garage</span></a>
-      <nav aria-label="Основная навигация" className={menu ? 'open' : ''}>
-        {nav.map(([id, label]) => <a key={id} href={`${home ? '' : BASE}#${id}`} onClick={() => setMenu(false)}>{label}</a>)}
-        <a className="nav-prices" href={`${BASE}prices.html`} onClick={() => setMenu(false)}>Все услуги</a>
+      <nav id="site-navigation" aria-label="Основная навигация" className={menu ? 'open' : ''}>
+        <a href={`${BASE}prices.html`} aria-current={page.type === 'prices' ? 'page' : undefined} onClick={() => setMenu(false)}>Услуги и цены</a>
+        {nav.map(([hash, label]) => <a key={hash} href={`${home ? '' : BASE}${hash}`} onClick={() => setMenu(false)}>{label}</a>)}
       </nav>
       <a className="header-phone" href={phone} aria-label={`Позвонить: ${phoneLabel}`}><Phone size={20} /><span>{phoneLabel}</span></a>
-      <button className="menu-toggle icon-button" aria-label={menu ? 'Закрыть меню' : 'Открыть меню'} aria-expanded={menu} onClick={() => setMenu(!menu)}>{menu ? <X size={24} /> : <List size={24} />}</button>
+      <button className="menu-toggle icon-button" aria-label={menu ? 'Закрыть меню' : 'Открыть меню'} aria-expanded={menu} aria-controls="site-navigation" onClick={() => setMenu(!menu)}>{menu ? <X size={24} /> : <List size={24} />}</button>
     </header>
 
     <main id="main">{page.type === 'legal' ? <PersonalData document={page.document} />
-      : page.type === 'prices' ? <FullPriceList onSelect={ask} callback={<Callback title="Не нашли нужную работу?" text="Оставьте номер — перезвоним и скажем цену для вашей машины." />} />
-      : page.type === 'direction' ? <DirectionPrices direction={page.direction} onSelect={ask} callback={<Callback title="Узнать цену для вашей машины" text="Оставьте номер — перезвоним и скажем, сколько это будет стоить." service={page.direction.name} />} /> : <>
+      : page.type === 'prices' ? <FullPriceList onSelect={ask} />
+      : page.type === 'direction' ? <DirectionPrices direction={page.direction} onSelect={ask} contact={contact} /> : <>
       <section className="hero">
         <Photo className="hero-photo" name="hero" full={1254} width={1254} height={1254} sizes="(max-width: 760px) 100vw, 50vw" alt="Механик за работой в автомобильной мастерской — иллюстрация" priority />
         <div className="hero-copy">
-
           {site.rating && <a className="hero-rating" href="#reviews"><Star size={18} weight="fill" /><b>{ratingText}</b><span>{site.rating.count} {reviewWord(site.rating.count)} на Яндекс Картах</span></a>}
-          <h1><small className="eyebrow">Автосервис на Соколиной Горе</small>Ремонт и обслуживание <span>любых автомобилей</span></h1>
-          <p className="hero-intro">Берём машины любых марок. Делаем ТО, находим причину поломки и чиним — от колодок до двигателя.</p>
+          <h1><small className="eyebrow">Автосервис на Соколиной Горе</small>Ремонт и обслуживание <span>автомобилей</span></h1>
+          <p className="hero-intro">Делаем ТО, ремонтируем подвеску, тормоза и двигатель, варим пороги и днище. Работаем с автомобилями любых марок.</p>
           <div className="hero-actions">
             <button className="button primary" onClick={() => ask('', true)}>Консультация<ArrowUpRight size={20} /></button>
             <a className="button secondary" href={phone}><Phone size={20} />Позвонить</a>
@@ -315,13 +301,17 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
         </div>
       </section>
 
-      <section className="finder wrap" aria-label="Быстрый поиск">
+      <section className="services wrap section" id="prices">
+        <Heading title="Услуги" link={<a className="heading-link" href={`${BASE}prices.html`}>Все услуги<ArrowRight size={18} /></a>} />
         <form className="finder-search" action={`${BASE}prices.html`} method="get" role="search">
           <MagnifyingGlass size={20} /><label className="sr-only" htmlFor="finder-q">Найти работу и цену</label>
           <input id="finder-q" name="q" type="search" placeholder="Колодки, ГРМ, R16…" enterKeyHint="search" />
           <button className="button primary" type="submit">Найти</button>
         </form>
-        <nav className="chips finder-links" aria-label="Популярные разделы">{quickLinks.map(([label, href]) => <a key={label} href={href}>{label}</a>)}</nav>
+        <div className="service-grid">{mainServices.map(({ id, title, text, image }) => <a className="service-card" key={id} href={directionLink(id)}>
+          <img src={`${BASE}assets/service-${image}.webp`} width={512} height={320} alt="" loading="lazy" decoding="async" />
+          <div className="service-card-copy"><h3>{title}</h3><p>{text}</p><ArrowRight size={18} aria-hidden="true" /></div>
+        </a>)}</div>
       </section>
 
       <section className="trust wrap" id="trust" aria-label="Почему нам доверяют">
@@ -332,26 +322,16 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
       {site.promo?.title && <Promo promo={site.promo} onAsk={ask} />}
 
       <section className="problems wrap section" id="problems">
-        <Heading eyebrow="Разбираться в ремонте не нужно" title="Что случилось с машиной?" />
+        <Heading title="Что случилось с машиной?" />
         <div className="problem-grid">
-          <button className="problem-card problem-unknown" onClick={() => ask(unknownProblem[0], true)}><span className="problem-text"><h3>{unknownProblem[0]}</h3><p>Опишите своими словами, подскажем</p></span><ArrowUpRight size={20} /></button>
-          {problems.map(([title]) => <button className="problem-card" key={title} onClick={() => ask(title)}><span className="problem-text"><h3>{title}</h3></span><ArrowUpRight size={20} /></button>)}
+          {problems.map(([title, id]) => <a className="problem-card" key={title} href={directionLink(id)}><h3>{title}</h3><ArrowRight size={20} aria-hidden="true" /></a>)}
+          <button className="problem-card problem-unknown" type="button" onClick={() => ask('', true)}><span className="problem-text"><span className="problem-title">Не знаю, в чём причина</span><p>Опишите, что заметили</p></span><ArrowUpRight size={20} aria-hidden="true" /></button>
         </div>
       </section>
 
-      <section className="services wrap section" id="prices">
-        <Heading title="Услуги" link={<a className="heading-link" href={`${BASE}prices.html`}>Все услуги<ArrowRight size={18} /></a>} />
-        <div className="service-grid">{mainServices.map(({ id, title, text, image }) => <a className="service-card" key={id} href={directionLink(id)}>
-          <img src={`${BASE}assets/service-${image}.webp`} width={512} height={320} alt="" loading="lazy" decoding="async" />
-          <div className="service-card-copy"><h3>{title}</h3><p>{text}</p><ArrowRight size={18} aria-hidden="true" /></div>
-        </a>)}</div>
-      </section>
-
-      <Reviews />
-
       <section className="about section" id="about">
         <div className="wrap">
-          <Heading eyebrow="Как мы работаем" title={<>Сначала находим причину.<br />Потом чиним.</>} />
+          <Heading title="Как проходит ремонт" />
           <div className="about-photos">
             <figure className="about-photo"><Photo name="workshop" full={1280} width={1280} height={853} sizes="(max-width: 760px) 86vw, 45vw" alt="Рабочая зона автосервиса: подъёмник, инструмент и автомобили в ремонте" /></figure>
             <figure className="about-photo"><Photo name="body" full={1280} width={1280} height={853} sizes="(max-width: 760px) 86vw, 45vw" alt="Кузов автомобиля на подъёмнике во время кузовного ремонта" /></figure>
@@ -359,6 +339,8 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
           <ol className="steps">{steps.map(([title, text], i) => <li key={title}><span className="step-number">{i + 1}</span><div><h3>{title}</h3><p>{text}</p></div></li>)}</ol>
         </div>
       </section>
+
+      <Reviews />
 
       <section className="faq section wrap" id="faq">
         <Heading eyebrow="Перед визитом" title="Частые вопросы" />
@@ -368,21 +350,20 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
       <section className="contact section" id="contacts">
         <div className="wrap contact-grid">
           <div className="contact-info">
-            <p className="eyebrow">Контакты</p>
-            <h2>Приезжайте или позвоните</h2>
+            <h2>Контакты и проезд</h2>
             <a className="contact-phone" href={phone}><Phone size={24} />{phoneLabel}</a>
             <Messengers className="contact-messengers" />
             {hoursText() && <div className="contact-line contact-hours"><Clock size={20} /><span>{hoursText()}<OpenStatus /></span></div>}
             <a className="contact-line" href={maps} target="_blank" rel="noreferrer"><MapPin size={20} /><span>{address}<small>Построить маршрут</small></span><ArrowUpRight size={18} /></a>
-            <figure className="map-card">
-              <iframe title="The Big One Garage на Яндекс Картах" src={mapWidget} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen />
-              <figcaption><a href={maps} target="_blank" rel="noreferrer"><MapTrifold size={18} />Открыть маршрут в Яндекс Картах<ArrowUpRight size={16} /></a></figcaption>
-            </figure>
             {site.entry && <p className="contact-entry"><b>Как заехать.</b> {site.entry}</p>}
             <a className="contact-line" href="mailto:thebigonegarage@bk.ru"><span>thebigonegarage@bk.ru<small>Написать на почту</small></span><ArrowUpRight size={18} /></a>
+            <button className="button primary contact-cta" type="button" onClick={() => ask('', true)}>Оставить заявку<ArrowUpRight size={20} /></button>
             {!site.hours?.length && <p className="form-note">Время визита уточняйте по телефону.</p>}
           </div>
-          <div className="contact-form"><h3>Оставьте номер — перезвоним</h3><LeadForm /></div>
+          <figure className="map-card">
+            <iframe title="The Big One Garage на Яндекс Картах" src={mapWidget} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen />
+            <figcaption><a href={maps} target="_blank" rel="noreferrer"><MapTrifold size={18} />Открыть маршрут в Яндекс Картах<ArrowUpRight size={16} /></a></figcaption>
+          </figure>
         </div>
       </section>
     </>}</main>
@@ -390,13 +371,13 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
     <footer className="site-footer"><div className="wrap footer-grid">
       <div className="footer-brand"><a href={BASE} className="brand">The Big One <span>Garage</span></a></div>
       <div className="footer-col"><b>Контакты</b><a href={phone}>{phoneLabel}</a>{hoursText() && <span>{hoursText()}</span>}<a href={maps} target="_blank" rel="noreferrer">{address}</a><a href="mailto:thebigonegarage@bk.ru">thebigonegarage@bk.ru</a></div>
-      <div className="footer-col"><b>Разделы</b><a href={`${BASE}prices.html`}>Все услуги</a>{nav.map(([id, label]) => <a key={id} href={`${home ? '' : BASE}#${id}`}>{label}</a>)}</div>
+      <div className="footer-col"><b>Разделы</b><a href={`${BASE}prices.html`}>Все услуги</a>{nav.map(([hash, label]) => <a key={hash} href={`${home ? '' : BASE}${hash}`}>{label}</a>)}</div>
       {(whatsappUrl || telegramUrl || maxUrl || vkUrl) && <div className="footer-col"><b>Мы на связи</b>{whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer">WhatsApp</a>}{telegramUrl && <a href={telegramUrl} target="_blank" rel="noreferrer">Telegram</a>}{maxUrl && <a href={maxUrl} target="_blank" rel="noreferrer">MAX</a>}{vkUrl && <a href={vkUrl} target="_blank" rel="noreferrer">ВКонтакте</a>}<a href={`${maps}reviews/`} target="_blank" rel="noreferrer">Отзывы на Яндекс Картах</a></div>}
       <div className="footer-legal"><span>© {new Date().getFullYear()} The Big One Garage</span>{Object.values(personalDataPages).map(({ path, title }) => <a key={path} href={BASE + path}>{title}</a>)}</div>
     </div></footer>
 
     {modal && <Dialog title={modal.consultation ? 'Задать вопрос мастеру' : 'Узнать стоимость ремонта'} onClose={() => setModal(null)}>
-      <LeadForm key={modal.service} service={modal.service} consultation={modal.consultation} />
+      <LeadForm key={modal.service} service={modal.service} />
     </Dialog>}
   </>;
 }

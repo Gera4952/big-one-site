@@ -65,7 +65,7 @@ img { max-width: 100%; }
 .header nav { display: none; }
 .header nav.open { position: absolute; top: 60px; left: 0; right: 0; display: grid; padding: 8px var(--gutter) 16px; background: #141416; border-bottom: 1px solid var(--line); box-shadow: 0 24px 40px rgba(0, 0, 0, .5); }
 .header nav a { display: flex; align-items: center; min-height: 52px; font-size: 17px; border-bottom: 1px solid var(--line); }
-.header nav a:last-child { border-bottom: 0; color: var(--red-text); }
+.header nav a:last-child { border-bottom: 0; }
 .header-phone { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 44px; min-height: 44px; border-radius: 12px; color: var(--text); }
 .header-phone span { display: none; }
 
@@ -96,13 +96,13 @@ img { max-width: 100%; }
 .problem-unknown p { color: #d4d4d2; }
 
 /* Services and prices */
-.services { border-top: 1px solid var(--line); }
+.services { border-top: 1px solid var(--line); padding-bottom: 24px; }
 .services .section-heading { align-items: center; }
 .service-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .service-card { display: grid; grid-template-rows: auto 1fr; min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
 .service-card img { display: block; width: 100%; height: auto; aspect-ratio: 8 / 5; object-fit: cover; background: var(--surface-2); }
 .service-card-copy { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: start; align-items: center; gap: 4px 6px; padding: 10px; }
-.service-card-copy h3 { font-size: clamp(14px, 3.8vw, 19px); line-height: 1.25; letter-spacing: 0; text-wrap: initial; overflow-wrap: anywhere; }
+.service-card-copy h3 { font-size: clamp(14px, 3.8vw, 19px); line-height: 1.25; letter-spacing: 0; text-wrap: balance; }
 .service-card-copy p { grid-column: 1 / -1; font-size: 13px; line-height: 1.4; color: var(--muted); }
 .service-card-copy svg { grid-column: 2; grid-row: 1; color: var(--red-text); }
 @media (max-width: 370px) {
@@ -152,6 +152,8 @@ img { max-width: 100%; }
 /* Contacts and form */
 .contact { background: #141416; border-top: 1px solid var(--line); }
 .contact-grid { display: grid; gap: 28px; }
+.contact-cta { margin-top: 14px; }
+.contact-grid > .map-card { margin-top: 0; }
 .contact h2 { margin-bottom: 18px; }
 .contact-phone { display: flex; align-items: center; gap: 12px; min-height: 56px; margin-bottom: 10px; font-size: 26px; font-weight: 600; letter-spacing: -.02em; }
 .contact-phone svg { color: var(--red-text); }
@@ -160,8 +162,6 @@ img { max-width: 100%; }
 .contact-line span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .contact-line small { display: block; margin-top: 2px; font-size: 13px; color: var(--muted); }
 .contact-line > svg:last-child { color: var(--muted); }
-.contact-form { padding: 20px 16px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
-.contact-form h3 { font-size: 20px; margin-bottom: 16px; }
 .lead-form { display: grid; gap: 14px; }
 .lead-form > label, .lead-fields-grid label { display: block; min-width: 0; font-size: 14px; color: #e2e2df; }
 .lead-fields-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 10px; }
@@ -234,7 +234,7 @@ dialog::backdrop { background: rgba(0, 0, 0, .7); -webkit-backdrop-filter: blur(
   .brand { font-size: 22px; margin-right: 0; }
   .header nav, .header nav.open { position: static; display: flex; gap: 24px; margin: 0 auto; padding: 0; background: none; border: 0; box-shadow: none; }
   .header nav a { min-height: 44px; font-size: 15px; border: 0; color: #d8d8d6; }
-  .header nav a:hover { color: var(--red-text); }
+  .header nav a:hover, .header nav a[aria-current=page] { color: var(--red-text); }
   .header-phone { font-weight: 600; font-size: 17px; }
   .header-phone span { display: inline; }
   .menu-toggle { display: none; }
@@ -257,7 +257,6 @@ dialog::backdrop { background: rgba(0, 0, 0, .7); -webkit-backdrop-filter: blur(
   .review-load { padding: 32px; }
   .review-actions { grid-template-columns: auto auto; justify-content: start; }
   .contact-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: start; }
-  .contact-form { padding: 28px; }
   .contact-phone { font-size: 32px; }
   footer.site-footer { padding-bottom: 32px; }
   .footer-grid { grid-template-columns: 1.3fr 1.2fr 1fr 1fr; gap: 32px; }
@@ -318,46 +317,20 @@ dialog::backdrop { background: rgba(0, 0, 0, .7); -webkit-backdrop-filter: blur(
 }
 @media (min-width: 1100px) { .trust-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .trust-item { flex-direction: column; } }
 
-/* Phone-only "call me back" form */
-.callback { display: grid; gap: 12px; margin-top: 16px; padding: 16px; border-radius: var(--radius); background: #221a1a; border: 1px solid rgba(239, 43, 36, .4); }
-.callback-copy b { display: block; font-size: 17px; margin-bottom: 2px; }
-.callback-copy p { font-size: 14px; color: var(--muted); }
-.callback-row { display: grid; gap: 8px; }
-.callback-row input { display: block; width: 100%; min-height: 52px; padding: 13px 14px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong); background: #111113; color: #fff; font-size: 16px; }
-.callback-row input:focus { outline: none; border-color: var(--red-text); box-shadow: 0 0 0 3px rgba(255, 122, 115, .2); }
-.callback-row input::placeholder { color: #8d8d93; }
-.callback .form-note { margin: 0; }
-.callback[role=status] { grid-template-columns: auto 1fr; align-items: start; }
-.callback[role=status] svg { color: #9fd49a; }
-.callback[role=status] b { font-size: 16px; }
-.callback[role=status] p { font-size: 14px; color: var(--muted); }
-.callback[role=status] a { color: var(--text); text-decoration: underline; }
-.price-page .callback { margin: 28px 0 0; }
-@media (min-width: 760px) {
-  .callback { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: center; gap: 12px 24px; padding: 22px 24px; }
-  .callback-row { grid-template-columns: minmax(0, 1fr) auto; }
-  .callback .consent, .callback .form-error, .callback .form-note { grid-column: 2; }
-  .callback:not(:has(.callback-copy)) { grid-template-columns: 1fr; }
-}
-
 /* Reviews: the Yandex widget is shown open and scrolls inside its frame. */
 .review-card iframe { height: min(70dvh, 620px); min-height: 460px; }
 .review-footer { display: grid; gap: 10px; margin-top: 12px; }
 .review-footer .form-note { margin: 0; }
 @media (min-width: 760px) { .review-footer { grid-template-columns: 1fr auto; align-items: center; } .review-card iframe { height: 640px; } }
 
-/* Finder: search straight into the price list plus popular sections. */
-.finder { padding-top: 8px; }
-.finder-search { display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 4px 4px 4px 14px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line-strong); }
+/* Search in the services section */
+.finder-search { display: flex; max-width: 640px; margin-bottom: 16px; align-items: center; gap: 8px; min-height: 56px; padding: 4px 4px 4px 14px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line-strong); }
 .finder-search > svg { color: var(--muted); }
 .finder-search input { flex: 1; min-width: 0; padding: 10px 0; border: 0; background: none; color: inherit; font-size: 16px; }
 .finder-search input:focus { outline: none; }
 .finder-search input::placeholder { color: #8d8d93; }
 .finder-search:focus-within { border-color: var(--red-text); box-shadow: 0 0 0 3px rgba(255, 122, 115, .2); }
 .finder-search .button { min-height: 46px; padding: 10px 16px; font-size: 15px; box-shadow: none; }
-.finder-links { margin-top: 10px; margin-bottom: 0; }
-.finder-links a { flex: none; display: inline-flex; align-items: center; min-height: 40px; padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong); font-size: 14px; color: #d6d6d4; white-space: nowrap; }
-.finder-links a:hover { border-color: var(--red-text); color: var(--text); }
 
 /* Trust strip right under the first screen: swipe cards on phones. */
 .trust { padding-block: 24px 8px; border-top: 0; }
@@ -371,19 +344,18 @@ dialog::backdrop { background: rgba(0, 0, 0, .7); -webkit-backdrop-filter: blur(
 .trust-reviews b { color: #fff; }
 .trust-reviews svg:last-child { color: var(--muted); }
 
-/* Problems on phones: one list of tappable rows, "don't know" first. */
+/* Symptom shortcuts */
 .problem-grid { grid-template-columns: 1fr; gap: 8px; }
 .problem-card { flex-direction: row; align-items: center; gap: 12px; padding: 14px 16px; }
 .problem-card > svg { color: var(--red-text); }
 .problem-text { display: grid; gap: 3px; flex: 1; min-width: 0; }
-.problem-card h3 { font-size: 16px; }
+.problem-card h3, .problem-title { font-size: 16px; font-weight: 550; }
 .problem-card p { font-size: 13px; }
 .problem-link { padding-top: 2px; margin-top: 0; }
-.problem-unknown h3 { font-size: 17px; }
+.problem-unknown .problem-title { font-size: 17px; }
+.problem-card > svg { margin-left: auto; }
 
 @media (min-width: 760px) {
-  .finder { padding-top: 24px; }
-  .finder-links { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0; }
   .trust .trust-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; margin-inline: 0; padding-inline: 0; }
   .trust .trust-item { flex: none; }
   .problem-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -489,7 +461,7 @@ input[aria-invalid=true] { border-color: #ff7a73 !important; }
   .header nav a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 2px; border-radius: 2px; background: var(--red-text); transform: scaleX(0); transform-origin: left; transition: transform .25s ease; }
   .header nav a:hover::after { transform: scaleX(1); }
   .button.primary { transition: background-color .2s ease; }
-  .finder-links a, .messenger { transition: border-color .2s ease, color .2s ease, background-color .2s ease; }
+  .messenger { transition: border-color .2s ease, color .2s ease, background-color .2s ease; }
 }
 @media (prefers-reduced-motion: reduce) {
   .review-card { animation: none; }
@@ -518,7 +490,6 @@ input[aria-invalid=true] { border-color: #ff7a73 !important; }
   .hero-actions svg { width: 17px; height: 17px; }
   .hero-address { gap: 9px; min-height: 52px; margin-top: 12px; padding: 9px 0 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: none; }
   .hero-address .open-status { margin-top: 2px; }
-  .finder { padding-top: 6px; }
   .finder-search { gap: 7px; min-height: 52px; padding-left: 10px; }
   .finder-search .button { min-height: 44px; padding-inline: 12px; }
 
@@ -539,10 +510,11 @@ input[aria-invalid=true] { border-color: #ff7a73 !important; }
   .faq details p { padding-inline: 0; }
 
   .contact-grid { gap: 14px; }
+  .contact-cta { width: 100%; }
+  .contact-grid > .map-card { display: none; }
   .contact h2 { margin-bottom: 8px; }
   .contact-phone { min-height: 44px; margin-bottom: 6px; font-size: 24px; }
   .contact-line { padding: 10px 0; margin: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: none; }
-  .contact-form { padding: 16px 12px; }
   .lead-form > label, .lead-fields-grid label, .choice-label { font-size: 15px; }
   .choice-options button { min-height: 44px; }
   .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 16px; }
@@ -558,21 +530,16 @@ input[aria-invalid=true] { border-color: #ff7a73 !important; }
 }
 .reviews-score.is-empty { display: grid; place-items: center; width: 64px; height: 64px; border-radius: var(--radius); background: rgba(255, 196, 0, .1); color: #ffc400; }
 
-/* ===== Popular services: a card opens a short sheet with prices first ===== */
-/* Quick links above the search are kept for phones only; on a computer the directions below cover them. */
-@media (min-width: 760px) { .finder .finder-links { display: none; } }
+@media (min-width: 760px) { .services .finder-search { margin-bottom: 20px; } }
 @media (min-width: 760px) {
   .trust .trust-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 }
 
-/* Phones: one idea per screen. The quick chips repeat the price list, the second photo repeats the first,
-   the map repeats the «Построить маршрут» link — they stay on wide screens only. */
+/* The mobile page uses the workshop photo and a direct route link. */
 @media (max-width: 759px) {
-  .finder-links { display: none; }
   .about-photos { display: block; margin: 0 0 18px; padding: 0; overflow: visible; }
   .about-photos .about-photo { margin: 0; }
   .about-photos .about-photo + .about-photo { display: none; }
-  .contact-info > .map-card { display: none; }
   .reviews-score.is-empty { display: none; }
 }
 
@@ -620,6 +587,6 @@ input[aria-invalid=true] { border-color: #ff7a73 !important; }
   .header nav { display: none; }
   .header nav.open { position: absolute; top: 68px; left: 0; right: 0; display: grid; gap: 0; margin: 0; padding: 8px var(--gutter) 16px; background: #141416; border-bottom: 1px solid var(--line); box-shadow: 0 24px 40px rgba(0, 0, 0, .5); }
   .header nav.open a { min-height: 52px; font-size: 17px; border-bottom: 1px solid var(--line); color: var(--text); }
-  .header nav.open a:last-child { border-bottom: 0; color: var(--red-text); }
+  .header nav.open a:last-child { border-bottom: 0; }
   .menu-toggle { display: inline-flex; }
 }
