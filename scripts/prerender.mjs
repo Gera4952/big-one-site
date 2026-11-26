@@ -25,7 +25,7 @@ const escape = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').r
 const jsonLd = (data) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 const amount = (price) => Number(String(price).replace(/\D/g, '')) || 0;
 const priceOf = (name) => catalog.services.find(service => service.name === name)?.price;
-const allRows = catalog.categories.flatMap(category => category.groups.flatMap(group => group.rows));
+const allRows = directions.flatMap(category => category.groups.flatMap(group => group.rows));
 
 function page({ file, route, title, description, ld = [] }) {
   const url = siteUrl + file.replace(/(^|\/)index\.html$/, '');
@@ -64,14 +64,14 @@ urls.push(page({
 }));
 urls.push(page({
   file: 'prices.html', route: 'prices.html',
-  title: `Цены на ремонт автомобилей — ${works(allRows.length)} | The Big One Garage, Соколиная Гора`,
+  title: `Все услуги и цены — ${works(allRows.length)} | The Big One Garage, Соколиная Гора`,
   description: `Прайс автосервиса The Big One Garage на Соколиной Горе: шиномонтаж, двигатель, подвеска, тормоза, электрика и другие работы — ${allRows.length} позиций с ценами. Запись: ${phone}.`,
-  ld: [breadcrumbs([['Главная', siteUrl], ['Цены', siteUrl + 'prices.html']])],
+  ld: [breadcrumbs([['Главная', siteUrl], ['Все услуги', siteUrl + 'prices.html']])],
 }));
 for (const direction of directions) {
   urls.push(page({
     file: direction.path, route: direction.path, title: direction.title, description: direction.description,
-    ld: [breadcrumbs([['Главная', siteUrl], ['Цены', siteUrl + 'prices.html'], [direction.name, siteUrl + direction.path]]), offers(direction.name, direction.groups.flatMap(group => group.rows))],
+    ld: [breadcrumbs([['Главная', siteUrl], ['Все услуги', siteUrl + 'prices.html'], [direction.name, siteUrl + direction.path]]), offers(direction.name, direction.groups.flatMap(group => group.rows))],
   }));
 }
 

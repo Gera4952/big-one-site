@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState, useId } from 'react';
-import { ArrowUpRight, ArrowRight, Phone, MapPin, List, X, CheckCircle, CaretDown, MagnifyingGlass, ChatCircleDots, WhatsappLogo, TelegramLogo, Star, Clock, ShieldCheck, Eye, Handshake, CreditCard, MapTrifold, ListChecks, Wrench, PencilSimple, Hammer, Armchair, SpeakerHifi, Drop, Gift } from '@phosphor-icons/react';
-import catalog from './data/services.json';
-import { FullPriceList, DirectionPrices, PriceRows, PricePreview, fromPrice } from './components/FullPriceList.jsx';
+import { ArrowUpRight, ArrowRight, Phone, MapPin, List, X, CheckCircle, CaretDown, MagnifyingGlass, ChatCircleDots, WhatsappLogo, TelegramLogo, Star, Clock, ShieldCheck, Eye, Handshake, CreditCard, MapTrifold, ListChecks, Wrench, PencilSimple, Drop, Gift } from '@phosphor-icons/react';
+import { FullPriceList, DirectionPrices } from './components/FullPriceList.jsx';
 import { PersonalData } from './components/PersonalData.jsx';
 import { consentVersion, personalDataPages } from './personal-data.js';
 import { LeadCaptcha } from './components/LeadCaptcha.jsx';
-import { directionById, pageOf, works } from './seo.js';
+import { directionById, directions, pageOf, rowsOf, works } from './seo.js';
 import { site, whatsappUrl, telegramUrl, maxUrl, vkUrl, hoursText, openStatus } from './site.js';
 
 const BASE = import.meta.env.BASE_URL;
@@ -15,48 +14,22 @@ const phone = 'tel:+79160981891';
 const phoneLabel = '8 916 098 18 91';
 const maps = 'https://yandex.ru/maps/org/the_big_one_garage/152908357603/';
 const address = 'Москва, 9-я улица Соколиной Горы, 8, стр. 11';
-const { services } = catalog;
 const mapWidget = 'https://yandex.ru/map-widget/v1/org/the_big_one_garage/152908357603/';
 const trustIcons = { shield: ShieldCheck, eye: Eye, handshake: Handshake, card: CreditCard, chat: ChatCircleDots, star: Star, list: ListChecks, wrench: Wrench, clock: Clock };
 /* Promises the site already makes (steps and form notes); owner-confirmed items from site.json are added after them. */
-const priceRows = catalog.categories.flatMap(category => category.groups.flatMap(group => group.rows.map(row => ({ ...row, category: category.name, group: group.name.replace(/:\s*$/, '') }))));
-const workCount = priceRows.length;
+const workCount = directions.flatMap(rowsOf).length;
 const baseTrust = [
   { icon: 'list', title: `Прайс на ${works(workCount)} есть на сайте` },
   { icon: 'handshake', title: 'Цену называем до начала работ' },
   { icon: 'eye', title: 'Показываем, что сломалось и почему' },
 ];
-/* Frequent jobs with the price straight from the price list, so the two never disagree. */
-const findRow = (category, name, group) => priceRows.find(row => row.category === category && row.name === name && (!group || row.group.startsWith(group)));
-const findService = (name) => services.find(service => service.name === name);
-const categoryByName = (name) => catalog.categories.find(category => category.name === name);
-const fallbackText = 'Цена зависит от машины и объёма работ. Точную сумму назовём до начала ремонта.';
-/* What a card opens: price, a short description and the matching lines of the price list with a link
-   to the direction page, so the card informs first and the form comes after. */
-const sheet = ({ title, price, text, category, match, limit = 8 }) => {
-  const source = category && categoryByName(category);
-  const groups = source ? source.groups.map(group => ({ ...group, rows: group.rows.filter(row => !match || match.test(`${group.name} ${row.name}`)).slice(0, limit) })).filter(group => group.rows.length) : [];
-  return { name: title, price, text: text || fallbackText, groups, details: [], link: source ? { href: directionLink(source.id), label: `Все цены: ${source.name.toLowerCase()}` } : null };
-};
-const popular = [
-  { title: 'ТО', price: findService('Техническое обслуживание')?.price, text: findService('Техническое обслуживание')?.text },
-  { title: 'Шиномонтаж R15', price: findRow('Шиномонтаж и балансировка', 'R 15', 'Шиномонтаж (комплекс 4 колеса балансировка) - Легковые')?.price, category: 'Шиномонтаж и балансировка', match: /^(Шиномонтаж \(комплекс|Замена готового комплекта).*Легковые/ },
-  { title: 'Диагностика', price: findService('Диагностика')?.price, text: 'Найдём, что сломалось, и покажем вам — ещё до ремонта.' },
-  { title: 'Замена колодок', price: findRow('Тормозная система', 'Колодки (передние) - замена')?.price, category: 'Тормозная система', match: /Колодки|Диск/ },
-  { title: 'Замена ремня ГРМ', price: findRow('Двигатель', 'Ремень ГРМ - замена')?.price, category: 'Двигатель', match: /ГРМ/ },
-  { title: 'Амортизаторы', price: findRow('Подвеска', 'Амортизатор (задний, отдельно стоящий) - замена')?.price, category: 'Подвеска', match: /Амортизатор/ },
-].filter(item => item.price);
-/* «Не только ТО»: what a network service usually does not do. Prices come from the price list. */
-const salon = categoryByName('Перетяжка салона');
-const crafts = [
-  { id: 'body', icon: Hammer, title: 'Кузов и сварка', text: 'Варим кузов и днище.', prices: [['Сварочные работы', findService('Сварочные работы')?.price]],
-    sheet: { title: 'Кузов и сварка', price: findService('Сварочные работы')?.price, text: 'Объём работ видно только на осмотре. Посмотрим машину и назовём цену до начала сварки.' } },
-  { id: 'salon', icon: Armchair, title: 'Салон', text: 'Перетягиваем сиденья, руль и потолок. Делаем химчистку.', prices: [['Перетяжка', salon && fromPrice(salon)], ['Химчистка', findService('Химчистка салона')?.price]],
-    sheet: { title: 'Перетяжка салона', price: salon && fromPrice(salon), text: 'Цена зависит от машины и материала. Химчистка считается отдельно.', category: 'Перетяжка салона', limit: 6 } },
-  { id: 'noise', icon: ShieldCheck, title: 'Шумоизоляция и антикор', text: 'Чтобы в салоне было тише, а днище не ржавело.', prices: [['Шумоизоляция', findService('Шумоизоляция автомобиля')?.price], ['Антикор днища', findService('Обработка днища антикором')?.price]],
-    sheet: { title: 'Шумоизоляция и антикор', price: findService('Шумоизоляция автомобиля')?.price, text: `Шумоизоляция: ${findService('Шумоизоляция автомобиля')?.text?.toLowerCase() || 'цену назовём после осмотра.'} Обработка днища антикором — ${findService('Обработка днища антикором')?.price || 'по запросу'}.` } },
-  { id: 'audio', icon: SpeakerHifi, title: 'Автозвук', text: 'Ставим магнитолы, динамики и усилители.', prices: [['Установка', findService('Установка автомузыки')?.price]],
-    sheet: { title: 'Автозвук', price: findService('Установка автомузыки')?.price, text: 'Цена зависит от комплекта и машины. Назовём её до начала работ.' } },
+const mainServices = [
+  { id: 'modal-412277', title: 'Сварка кузова', text: 'Пороги, днище и арки', image: 'welding' },
+  { id: 'modal-412248', title: 'Техобслуживание', text: 'Масло, фильтры и плановое ТО', image: 'maintenance' },
+  { id: 'modal-412250', title: 'Диагностика', text: 'Поиск причины неисправности', image: 'diagnostics' },
+  { id: 'modal-412249', title: 'Шиномонтаж', text: 'Замена шин и балансировка', image: 'tires' },
+  { id: 'modal-412321', title: 'Ремонт подвески', text: 'Амортизаторы, рычаги и ступицы', image: 'suspension' },
+  { id: 'modal-412324', title: 'Ремонт тормозов', text: 'Колодки, диски и суппорты', image: 'brakes' },
 ];
 const visits = ['Сегодня', 'Завтра', 'На этой неделе', 'Пока только узнать цену'];
 const leadLabel = (...parts) => parts.filter(Boolean).join(' · ');
@@ -241,8 +214,8 @@ function LeadForm({ service = '', consultation = false, submitLabel }) {
   </form>;
 }
 
-function Callback({ service = '', title = 'Не хотите заполнять форму?', text = 'Оставьте номер — перезвоним сами.', compact = false }) {
-  return <div className={`callback ${compact ? 'is-compact' : ''}`}>
+function Callback({ service = '', title = 'Не хотите заполнять форму?', text = 'Оставьте номер — перезвоним сами.' }) {
+  return <div className="callback">
     {title && <div className="callback-copy"><b>{title}</b><p>{text}</p></div>}
     <LeadForm service={service} submitLabel="Перезвоните мне" />
   </div>;
@@ -310,16 +283,15 @@ function Reviews() {
 export function App({ path = typeof location === 'undefined' ? BASE : location.pathname }) {
   const page = pageOf(path), home = page.type === 'home';
   const [menu, setMenu] = useState(false), [modal, setModal] = useState(null);
-  const openSheet = (item) => { setMenu(false); setModal({ type: 'service', service: sheet(item) }); };
-  const ask = (service = '', consultation = false) => { setMenu(false); setModal({ type: 'lead', service, consultation }); window.dispatchEvent(new CustomEvent('bigone:lead-open', { detail: { service } })); };
-  const nav = [['problems', 'Что случилось'], ['prices', 'Цены'], ['reviews', 'Отзывы'], ['about', 'Как работаем'], ['contacts', 'Контакты']];
+  const ask = (service = '', consultation = false) => { setMenu(false); setModal({ service, consultation }); window.dispatchEvent(new CustomEvent('bigone:lead-open', { detail: { service } })); };
+  const nav = [['problems', 'Что случилось'], ['prices', 'Услуги'], ['reviews', 'Отзывы'], ['about', 'Как работаем'], ['contacts', 'Контакты']];
   return <>
     <a className="skip" href="#main">Перейти к содержанию</a>
     <header className="header">
       <a className="brand" href={BASE}>The Big One <span>Garage</span></a>
       <nav aria-label="Основная навигация" className={menu ? 'open' : ''}>
         {nav.map(([id, label]) => <a key={id} href={`${home ? '' : BASE}#${id}`} onClick={() => setMenu(false)}>{label}</a>)}
-        <a className="nav-prices" href={`${BASE}prices.html`} onClick={() => setMenu(false)}>Полный прайс</a>
+        <a className="nav-prices" href={`${BASE}prices.html`} onClick={() => setMenu(false)}>Все услуги</a>
       </nav>
       <a className="header-phone" href={phone} aria-label={`Позвонить: ${phoneLabel}`}><Phone size={20} /><span>{phoneLabel}</span></a>
       <button className="menu-toggle icon-button" aria-label={menu ? 'Закрыть меню' : 'Открыть меню'} aria-expanded={menu} onClick={() => setMenu(!menu)}>{menu ? <X size={24} /> : <List size={24} />}</button>
@@ -368,27 +340,11 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
       </section>
 
       <section className="services wrap section" id="prices">
-        <Heading eyebrow="От ТО до серьёзного ремонта" title="Популярные работы и цены" link={<a className="heading-link" href={`${BASE}prices.html`}>Весь прайс<ArrowRight size={18} /></a>} />
-        <div className="popular-grid">{popular.map(item => <button type="button" className="popular-card" key={item.title} onClick={() => openSheet(item)}>
-          <span className="popular-title">{item.title}</span><b>{item.price}</b><span className="popular-more" aria-hidden="true"><ArrowRight size={18} /></span>
-        </button>)}</div>
-        <PricePreview />
-      </section>
-
-      <section className="crafts section" id="crafts">
-        <div className="wrap">
-          <Heading eyebrow="Не только ремонт" title="А ещё кузов, салон и звук" />
-          <div className="crafts-grid">
-            {crafts.map(({ id, icon: Icon, title, text, prices, sheet: info }, index) => <button type="button" className={`craft-card craft-${id}`} key={id} onClick={() => openSheet(info)}>
-              {index === 0 && <Photo className="craft-photo" name="body" full={1280} width={1280} height={853} sizes="(max-width: 760px) 100vw, 40vw" alt="" />}
-              <span className="craft-icon"><Icon size={26} /></span>
-              <span className="craft-body"><h3>{title}</h3><p>{text}</p>
-                <span className="craft-prices">{prices.filter(([, price]) => price).map(([label, price]) => <span key={label}><small>{label}</small><b>{price}</b></span>)}</span>
-              </span>
-              <span className="craft-more">Цены<ArrowRight size={16} /></span>
-            </button>)}
-          </div>
-        </div>
+        <Heading title="Услуги" link={<a className="heading-link" href={`${BASE}prices.html`}>Все услуги<ArrowRight size={18} /></a>} />
+        <div className="service-grid">{mainServices.map(({ id, title, text, image }) => <a className="service-card" key={id} href={directionLink(id)}>
+          <img src={`${BASE}assets/service-${image}.webp`} width={512} height={320} alt="" loading="lazy" decoding="async" />
+          <div className="service-card-copy"><h3>{title}</h3><p>{text}</p><ArrowRight size={18} aria-hidden="true" /></div>
+        </a>)}</div>
       </section>
 
       <Reviews />
@@ -434,22 +390,13 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
     <footer className="site-footer"><div className="wrap footer-grid">
       <div className="footer-brand"><a href={BASE} className="brand">The Big One <span>Garage</span></a></div>
       <div className="footer-col"><b>Контакты</b><a href={phone}>{phoneLabel}</a>{hoursText() && <span>{hoursText()}</span>}<a href={maps} target="_blank" rel="noreferrer">{address}</a><a href="mailto:thebigonegarage@bk.ru">thebigonegarage@bk.ru</a></div>
-      <div className="footer-col"><b>Разделы</b><a href={`${BASE}prices.html`}>Полный прайс</a>{nav.map(([id, label]) => <a key={id} href={`${home ? '' : BASE}#${id}`}>{label}</a>)}</div>
+      <div className="footer-col"><b>Разделы</b><a href={`${BASE}prices.html`}>Все услуги</a>{nav.map(([id, label]) => <a key={id} href={`${home ? '' : BASE}#${id}`}>{label}</a>)}</div>
       {(whatsappUrl || telegramUrl || maxUrl || vkUrl) && <div className="footer-col"><b>Мы на связи</b>{whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer">WhatsApp</a>}{telegramUrl && <a href={telegramUrl} target="_blank" rel="noreferrer">Telegram</a>}{maxUrl && <a href={maxUrl} target="_blank" rel="noreferrer">MAX</a>}{vkUrl && <a href={vkUrl} target="_blank" rel="noreferrer">ВКонтакте</a>}<a href={`${maps}reviews/`} target="_blank" rel="noreferrer">Отзывы на Яндекс Картах</a></div>}
       <div className="footer-legal"><span>© {new Date().getFullYear()} The Big One Garage</span>{Object.values(personalDataPages).map(({ path, title }) => <a key={path} href={BASE + path}>{title}</a>)}</div>
     </div></footer>
 
-    {modal && <Dialog title={modal.type === 'service' ? modal.service.name : modal.consultation ? 'Задать вопрос мастеру' : 'Узнать стоимость ремонта'} onClose={() => setModal(null)}>
-      {modal.type === 'service' ? <>
-        <p className="modal-price">{modal.service.price}</p>
-        <p className="modal-description">{modal.service.text}</p>
-        {modal.service.link && <a className="text-link dialog-direction" href={modal.service.link.href}>{modal.service.link.label}<ArrowRight size={18} /></a>}
-        {modal.service.groups?.length > 0 && <PriceRows groups={modal.service.groups} category={modal.service.name} onSelect={ask} />}
-        {modal.service.details.length > 0 && <ul className="service-details">{modal.service.details.map(d => <li key={d}><CheckCircle size={19} />{d}</li>)}</ul>}
-        <p className="price-note">Точную цену для вашей машины назовём после осмотра.</p>
-        <Callback compact service={modal.service.name} title="Узнать цену для вашей машины" text="Оставьте номер — перезвоним и скажем, сколько это будет стоить." />
-        <button className="text-link dialog-more" onClick={() => setModal({ type: 'lead', service: modal.service.name })}>Описать проблему подробнее<ArrowRight size={18} /></button>
-      </> : <LeadForm key={modal.service} service={modal.service} consultation={modal.consultation} />}
+    {modal && <Dialog title={modal.consultation ? 'Задать вопрос мастеру' : 'Узнать стоимость ремонта'} onClose={() => setModal(null)}>
+      <LeadForm key={modal.service} service={modal.service} consultation={modal.consultation} />
     </Dialog>}
   </>;
 }

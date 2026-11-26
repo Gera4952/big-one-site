@@ -60,8 +60,8 @@ ${pages.map((file) => '  /' + path.relative(out, file).split(path.sep).join('/')
 Переадресацию HTTP → HTTPS включайте в настройках хостинга.
 
 КОНСТРУКТОР (MatroNet и т. п.)
-1. Загрузите папку assets и файлы favicon.svg, favicon-32.png, apple-touch-icon.png, og-image.jpg
-   так, чтобы они открывались по адресам https://ваш-домен/assets/hero-720.jpg, https://ваш-домен/favicon.svg.
+1. Загрузите папку assets и файлы favicon-120.png, favicon.ico, apple-touch-icon.png, og-image.jpg
+   так, чтобы они открывались по адресам https://ваш-домен/assets/hero-720.jpg, https://ваш-домен/favicon-120.png.
 2. Для каждой страницы создайте страницу с тем же адресом (например /prices.html; если конструктор
    не разрешает .html — /prices) и замените весь её код содержимым файла целиком.
 3. Если конструктор добавляет свою шапку, меню или стили — отключите их для этих страниц.
