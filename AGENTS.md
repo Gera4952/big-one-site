@@ -30,7 +30,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 
 - Mobile layout uses readable text, quiet separators and clear actions for prices and contact. Prefer plain lists over repeated card grids, and keep decorative labels and effects out of the reading flow.
 
-- Prefer real photographs of a credible service operation or a recognizable stage of the repair. Verify what the image shows and its reuse terms. Use the actual workshop photos where they fit and keep photo credits in the footer. For generated illustrations, prefer tight crops of the tool and part, appropriate protective equipment, and as few visible hands as the scene needs. Service page images have no visible caption.
+- Prefer real photographs of a credible service operation or a recognizable stage of the repair. Verify what the image shows and its reuse terms. Use the actual workshop photos where they fit and keep photo credits in the privacy policy (privacy.html), including author, source, license links and the cropping notice. Policy and consent pages stay accessible but use noindex and are excluded from sitemap.xml. For generated illustrations, prefer tight crops of the tool and part, appropriate protective equipment, and as few visible hands as the scene needs. Service page images have no visible caption.
 
 - Use the service logo from Big One CRM and align the header with the shared content width. Prefer warm graphite, a single red accent, shop photos, and simple dividers.
 

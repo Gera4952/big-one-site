@@ -26,7 +26,7 @@ const jsonLd = (data) => `<script type="application/ld+json">${JSON.stringify(da
 const amount = (price) => Number(String(price).replace(/\D/g, '')) || 0;
 const priceOf = (name) => catalog.services.find(service => service.name === name)?.price;
 
-function page({ file, route, title, description, ld = [] }) {
+function page({ file, route, title, description, ld = [], noindex = false }) {
   const url = siteUrl + file.replace(/(^|\/)index\.html$/, '');
   let html = template
     .replace(/<title>[^<]*<\/title>/, () => `<title>${escape(title)}</title>`)
@@ -35,7 +35,7 @@ function page({ file, route, title, description, ld = [] }) {
     .replace(/(<meta property="og:description" content=")[^"]*/, (_, start) => start + escape(description))
     .replace(/(<link rel="canonical" href=")[^"]*/, (_, start) => start + escape(url))
     .replace(/(<meta property="og:url" content=")[^"]*/, (_, start) => start + escape(url))
-    .replace('</head>', () => `${ld.map(jsonLd).join('')}</head>`);
+    .replace('</head>', () => `${noindex ? '<meta name="robots" content="noindex, follow">' : ''}${ld.map(jsonLd).join('')}</head>`);
   const body = render(base + route);
   if (body.length < 2000) throw new Error(`Prerender of ${file} produced almost no content`);
   // data-page says which page this file is, so it opens correctly under any address (/prices, /prices.html, a builder's own URL).
@@ -90,10 +90,12 @@ for (const direction of directions) {
 }
 
 for (const { path: route, title } of Object.values(personalDataPages)) {
-  urls.push(page({
+  // Keep legal documents crawlable so search engines can read their noindex directive.
+  page({
     file: route, route, title: `${title} | The Big One Garage`,
     description: `${title} посетителей сайта автосервиса The Big One Garage.`,
-  }));
+    noindex: true,
+  });
 }
 
 writeFileSync(path.join(client, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(loc => `  <url><loc>${escape(loc)}</loc></url>`).join('\n')}\n</urlset>\n`);
@@ -108,4 +110,4 @@ if (existsSync(notFound)) {
   if (counter && !html.includes('mc.yandex.ru/metrika')) html = html.replace('<head>', () => `<head>\n${counter}`);
   writeFileSync(notFound, html);
 }
-console.log(`Prerendered ${urls.length} pages, sitemap.xml and robots.txt for ${siteUrl}`);
+console.log(`Prerendered ${urls.length + Object.keys(personalDataPages).length} pages (${urls.length} indexable), sitemap.xml and robots.txt for ${siteUrl}`);

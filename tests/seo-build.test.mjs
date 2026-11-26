@@ -69,3 +69,25 @@ test('service pages have crawlable content, linked prices and a consultation but
     for (const [, target] of related) assert.ok(routes.includes(target), `${route} → ${target}`);
   }
 });
+
+test('legal documents are noindex, absent from sitemap, with photo credits only in the policy', async () => {
+  const sitemap = await read('sitemap.xml');
+  for (const route of ['privacy.html', 'personal-data-consent.html']) {
+    const html = await read(route);
+    const head = html.match(/<head>[\s\S]*?<\/head>/)?.[0];
+    assert.match(head, /<meta name="robots" content="noindex, follow">/);
+    assert.ok(!sitemap.includes(route));
+    assert.ok(!(await read('robots.txt')).includes(`Disallow: /${route}`));
+    assert.match(html, /<h1>/);
+  }
+  const privacy = await read('privacy.html');
+  assert.match(privacy, /id="photo-credits-title">Источники фотографий/);
+  assert.match(privacy, /Снимки кадрированы под страницы услуг/);
+  assert.match(privacy, /creativecommons.org/);
+  for (const route of ['index.html', 'prices.html', 'uslugi/remont-dvigatelya.html', 'personal-data-consent.html']) {
+    const html = await read(route);
+    assert.doesNotMatch(html, /Источники фотографий/);
+    assert.match(html, /href="\/privacy.html"/);
+    assert.match(html, /href="\/personal-data-consent.html"/);
+  }
+});

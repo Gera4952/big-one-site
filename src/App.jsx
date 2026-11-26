@@ -320,7 +320,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
       </div>
     </header>
 
-    <main id="main">{page.type === 'legal' ? <PersonalData document={page.document} />
+    <main id="main">{page.type === 'legal' ? <PersonalData document={page.document} photoCredits={photoCredits} />
       : page.type === 'prices' ? <ServiceCatalog onSelect={ask} />
       : page.type === 'direction' ? <DirectionPrices direction={page.direction} onSelect={ask} contact={contact} /> : <>
       <section className="hero wrap">
@@ -419,13 +419,6 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
       <div className="footer-legal">
         <span>© {new Date().getFullYear()} The Big One Garage</span>
         {Object.values(personalDataPages).map(({ path, title }) => <a key={path} href={BASE + path}>{title}</a>)}
-        <details className="footer-photo-credits">
-          <summary>Источники фотографий</summary>
-          <p>Снимки кадрированы под страницы услуг.</p>
-          <ul>{photoCredits.map(({ id, catalogTitle, photo: { credit } }) => <li key={id}>
-            {catalogTitle} · <a href={credit.source}>{credit.author}</a> · <a href={credit.licenseUrl}>{credit.license}</a>
-          </li>)}</ul>
-        </details>
       </div>
     </div></footer>
 

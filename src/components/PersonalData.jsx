@@ -9,7 +9,7 @@ function ContactEmail() {
   return <a href={`mailto:${operator.email}`}>{operator.email}</a>;
 }
 
-export function PersonalData({ document }) {
+export function PersonalData({ document, photoCredits = [] }) {
   const consent = document === 'consent';
   return <article className="wrap legal-document">
     <h1>{personalDataPages[document].title}</h1>
@@ -41,6 +41,13 @@ export function PersonalData({ document }) {
       <p>Отозвать согласие можно письмом на <ContactEmail /> или по юридическому адресу оператора. Укажите имя и контакт, по которым можно найти заявку. При отзыве или достижении цели оператор прекращает обработку и уничтожает данные в установленный законом срок, как правило, до 30 дней. При наличии другого законного основания обработка может продолжаться в пределах этого основания.</p>
       {!consent && <p>По этим же контактам можно запросить сведения об обработке и потребовать уточнения, блокирования или удаления данных в предусмотренных законом случаях. Действия оператора можно обжаловать в Роскомнадзоре или суде.</p>}
     </section>
+    {!consent && <section id="photo-credits" className="legal-photo-credits" aria-labelledby="photo-credits-title">
+      <h2 id="photo-credits-title">Источники фотографий</h2>
+      <p>Снимки кадрированы под страницы услуг.</p>
+      <ul>{photoCredits.map(({ id, catalogTitle, photo: { credit } }) => <li key={id}>
+        {catalogTitle} · <a href={credit.source}>{credit.author}</a> · <a href={credit.licenseUrl}>{credit.license}</a>
+      </li>)}</ul>
+    </section>}
     {consent && <p>Версия согласия: {consentVersion}.</p>}
     <p><a href={`${base}${personalDataPages[consent ? 'privacy' : 'consent'].path}`}>{personalDataPages[consent ? 'privacy' : 'consent'].title}</a></p>
   </article>;
