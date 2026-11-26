@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState, useId } from 'react';
 import { ArrowUpRight, ArrowRight, Phone, MapPin, List, X, CheckCircle, CaretDown, MagnifyingGlass, ChatCircleDots, WhatsappLogo, TelegramLogo, Star, Clock, ShieldCheck, Eye, Handshake, CreditCard, MapTrifold, ListChecks, Wrench, PencilSimple, Hammer, Armchair, SpeakerHifi, Drop, Gift } from '@phosphor-icons/react';
 import catalog from './data/services.json';
 import { FullPriceList, DirectionPrices, PriceRows, PricePreview, fromPrice } from './components/FullPriceList.jsx';
+import { PersonalData } from './components/PersonalData.jsx';
+import { consentVersion, personalDataPages } from './personal-data.js';
 import { LeadCaptcha } from './components/LeadCaptcha.jsx';
 import { directionById, pageOf, works } from './seo.js';
-import { site, whatsappUrl, telegramUrl, vkUrl, hoursText, openStatus } from './site.js';
+import { site, whatsappUrl, telegramUrl, maxUrl, vkUrl, hoursText, openStatus } from './site.js';
 
 const BASE = import.meta.env.BASE_URL;
 const leadsUrl = import.meta.env.VITE_SITE_LEADS_URL || site.leadsUrl;
@@ -76,10 +78,11 @@ function Photo({ name, full, width, height, sizes = '100vw', alt, className = ''
 }
 
 function Messengers({ className = '' }) {
-  if (!whatsappUrl && !telegramUrl) return null;
+  if (!whatsappUrl && !telegramUrl && !maxUrl) return null;
   return <div className={`messengers ${className}`.trim()}>
     {whatsappUrl && <a className="messenger whatsapp" href={whatsappUrl} target="_blank" rel="noreferrer"><WhatsappLogo size={22} weight="fill" />WhatsApp</a>}
     {telegramUrl && <a className="messenger telegram" href={telegramUrl} target="_blank" rel="noreferrer"><TelegramLogo size={22} weight="fill" />Telegram</a>}
+    {maxUrl && <a className="messenger max" href={maxUrl} target="_blank" rel="noreferrer"><ChatCircleDots size={22} weight="fill" />MAX</a>}
   </div>;
 }
 
@@ -196,7 +199,7 @@ function useLead(service) {
     setStatus('sending'); setError('');
     const params = new URLSearchParams(location.search); const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 20000);
     try {
-      const response = await fetch(leadsUrl || `${BASE}api/leads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ ...fields, car, captcha_token: captchaToken, service, started, id: key.current, source: location.pathname, utm: Object.fromEntries([...params].filter(([k]) => /^utm_(source|medium|campaign|term|content)$/.test(k))) }) });
+      const response = await fetch(leadsUrl || `${BASE}api/leads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ ...fields, car, consent_version: consentVersion, captcha_token: captchaToken, service, started, id: key.current, source: location.pathname, utm: Object.fromEntries([...params].filter(([k]) => /^utm_(source|medium|campaign|term|content)$/.test(k))) }) });
       const body = await response.json().catch(() => ({}));
       if (!response.ok || body.ok !== true || (leadsUrl && !Number.isInteger(body.id))) throw new Error(body.error || 'Не получили подтверждение отправки.');
       setStatus('success'); window.dispatchEvent(new CustomEvent('bigone:lead-sent', { detail: { service } }));
@@ -208,7 +211,7 @@ function useLead(service) {
   return { status, error, submit, setCaptchaToken, captchaAttempt, resetCaptcha };
 }
 
-function LeadForm({ service = '', consultation = false, onPrivacy, submitLabel }) {
+function LeadForm({ service = '', consultation = false, submitLabel }) {
   const [visit, setVisit] = useState('');
   const { status, error, submit, setCaptchaToken, captchaAttempt, resetCaptcha } = useLead(leadLabel(service, visit && `удобно: ${visit.toLowerCase()}`));
   if (status === 'success') return <div className="success" role="status"><CheckCircle size={36} weight="light" /><h3>Заявка отправлена</h3><p>Перезвоним по указанному номеру.</p><a href={phone}>Если вопрос срочный: {phoneLabel}</a></div>;
@@ -224,7 +227,13 @@ function LeadForm({ service = '', consultation = false, onPrivacy, submitLabel }
     <label>Текст обращения<textarea name="message" placeholder="Например, стучит спереди на кочках" maxLength={2000} rows={3} required /></label>
     <ChoiceChips label="Когда удобно приехать?" options={visits} value={visit} onChange={setVisit} />
     <div className="honeypot" aria-hidden="true"><label>Ваш сайт<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
-    <label className="consent"><input type="checkbox" name="consent" required value="yes" /><span>Согласен на обработку указанных данных для ответа на обращение. <button type="button" onClick={onPrivacy}>Об обработке данных</button></span></label>
+    <div className="consent">
+      <label><input type="checkbox" name="consent" required value="yes" />Даю согласие на обработку персональных данных для ответа на заявку.</label>
+      <div className="consent-documents">
+        <a href={BASE + personalDataPages.consent.path} target="_blank" rel="noopener">{personalDataPages.consent.title}</a>
+        <a href={BASE + personalDataPages.privacy.path} target="_blank" rel="noopener">{personalDataPages.privacy.title}</a>
+      </div>
+    </div>
     {captchaSiteKey && <LeadCaptcha siteKey={captchaSiteKey} onToken={setCaptchaToken} attempt={captchaAttempt} onRetry={resetCaptcha} />}
     <p className="form-error" role="alert">{error}</p>
     <button className="button primary" disabled={status === 'sending'}>{status === 'sending' ? 'Отправляем…' : submitLabel || (consultation ? 'Проконсультироваться' : 'Отправить заявку')}<ArrowUpRight size={20} /></button>
@@ -232,10 +241,10 @@ function LeadForm({ service = '', consultation = false, onPrivacy, submitLabel }
   </form>;
 }
 
-function Callback({ service = '', title = 'Не хотите заполнять форму?', text = 'Оставьте номер — перезвоним сами.', onPrivacy, compact = false }) {
+function Callback({ service = '', title = 'Не хотите заполнять форму?', text = 'Оставьте номер — перезвоним сами.', compact = false }) {
   return <div className={`callback ${compact ? 'is-compact' : ''}`}>
     {title && <div className="callback-copy"><b>{title}</b><p>{text}</p></div>}
-    <LeadForm service={service} onPrivacy={onPrivacy} submitLabel="Перезвоните мне" />
+    <LeadForm service={service} submitLabel="Перезвоните мне" />
   </div>;
 }
 
@@ -300,7 +309,7 @@ function Reviews() {
 
 export function App({ path = typeof location === 'undefined' ? BASE : location.pathname }) {
   const page = pageOf(path), home = page.type === 'home';
-  const [menu, setMenu] = useState(false), [modal, setModal] = useState(null), [privacy, setPrivacy] = useState(false);
+  const [menu, setMenu] = useState(false), [modal, setModal] = useState(null);
   const openSheet = (item) => { setMenu(false); setModal({ type: 'service', service: sheet(item) }); };
   const ask = (service = '', consultation = false) => { setMenu(false); setModal({ type: 'lead', service, consultation }); window.dispatchEvent(new CustomEvent('bigone:lead-open', { detail: { service } })); };
   const nav = [['problems', 'Что случилось'], ['prices', 'Цены'], ['reviews', 'Отзывы'], ['about', 'Как работаем'], ['contacts', 'Контакты']];
@@ -316,8 +325,9 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
       <button className="menu-toggle icon-button" aria-label={menu ? 'Закрыть меню' : 'Открыть меню'} aria-expanded={menu} onClick={() => setMenu(!menu)}>{menu ? <X size={24} /> : <List size={24} />}</button>
     </header>
 
-    <main id="main">{page.type === 'prices' ? <FullPriceList onSelect={ask} callback={<Callback title="Не нашли нужную работу?" text="Оставьте номер — перезвоним и скажем цену для вашей машины." onPrivacy={() => setPrivacy(true)} />} />
-      : page.type === 'direction' ? <DirectionPrices direction={page.direction} onSelect={ask} callback={<Callback title="Узнать цену для вашей машины" text="Оставьте номер — перезвоним и скажем, сколько это будет стоить." service={page.direction.name} onPrivacy={() => setPrivacy(true)} />} /> : <>
+    <main id="main">{page.type === 'legal' ? <PersonalData document={page.document} />
+      : page.type === 'prices' ? <FullPriceList onSelect={ask} callback={<Callback title="Не нашли нужную работу?" text="Оставьте номер — перезвоним и скажем цену для вашей машины." />} />
+      : page.type === 'direction' ? <DirectionPrices direction={page.direction} onSelect={ask} callback={<Callback title="Узнать цену для вашей машины" text="Оставьте номер — перезвоним и скажем, сколько это будет стоить." service={page.direction.name} />} /> : <>
       <section className="hero">
         <Photo className="hero-photo" name="hero" full={1254} width={1254} height={1254} sizes="(max-width: 760px) 100vw, 50vw" alt="Механик за работой в автомобильной мастерской — иллюстрация" priority />
         <div className="hero-copy">
@@ -416,7 +426,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
             <a className="contact-line" href="mailto:thebigonegarage@bk.ru"><span>thebigonegarage@bk.ru<small>Написать на почту</small></span><ArrowUpRight size={18} /></a>
             {!site.hours?.length && <p className="form-note">Время визита уточняйте по телефону.</p>}
           </div>
-          <div className="contact-form"><h3>Оставьте номер — перезвоним</h3><LeadForm onPrivacy={() => setPrivacy(true)} /></div>
+          <div className="contact-form"><h3>Оставьте номер — перезвоним</h3><LeadForm /></div>
         </div>
       </section>
     </>}</main>
@@ -425,8 +435,8 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
       <div className="footer-brand"><a href={BASE} className="brand">The Big One <span>Garage</span></a></div>
       <div className="footer-col"><b>Контакты</b><a href={phone}>{phoneLabel}</a>{hoursText() && <span>{hoursText()}</span>}<a href={maps} target="_blank" rel="noreferrer">{address}</a><a href="mailto:thebigonegarage@bk.ru">thebigonegarage@bk.ru</a></div>
       <div className="footer-col"><b>Разделы</b><a href={`${BASE}prices.html`}>Полный прайс</a>{nav.map(([id, label]) => <a key={id} href={`${home ? '' : BASE}#${id}`}>{label}</a>)}</div>
-      {(whatsappUrl || telegramUrl || vkUrl) && <div className="footer-col"><b>Мы на связи</b>{whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer">WhatsApp</a>}{telegramUrl && <a href={telegramUrl} target="_blank" rel="noreferrer">Telegram</a>}{vkUrl && <a href={vkUrl} target="_blank" rel="noreferrer">ВКонтакте</a>}<a href={`${maps}reviews/`} target="_blank" rel="noreferrer">Отзывы на Яндекс Картах</a></div>}
-      <div className="footer-legal"><span>© {new Date().getFullYear()} The Big One Garage</span><button onClick={() => setPrivacy(true)}>Обработка данных</button></div>
+      {(whatsappUrl || telegramUrl || maxUrl || vkUrl) && <div className="footer-col"><b>Мы на связи</b>{whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer">WhatsApp</a>}{telegramUrl && <a href={telegramUrl} target="_blank" rel="noreferrer">Telegram</a>}{maxUrl && <a href={maxUrl} target="_blank" rel="noreferrer">MAX</a>}{vkUrl && <a href={vkUrl} target="_blank" rel="noreferrer">ВКонтакте</a>}<a href={`${maps}reviews/`} target="_blank" rel="noreferrer">Отзывы на Яндекс Картах</a></div>}
+      <div className="footer-legal"><span>© {new Date().getFullYear()} The Big One Garage</span>{Object.values(personalDataPages).map(({ path, title }) => <a key={path} href={BASE + path}>{title}</a>)}</div>
     </div></footer>
 
     {modal && <Dialog title={modal.type === 'service' ? modal.service.name : modal.consultation ? 'Задать вопрос мастеру' : 'Узнать стоимость ремонта'} onClose={() => setModal(null)}>
@@ -437,17 +447,9 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
         {modal.service.groups?.length > 0 && <PriceRows groups={modal.service.groups} category={modal.service.name} onSelect={ask} />}
         {modal.service.details.length > 0 && <ul className="service-details">{modal.service.details.map(d => <li key={d}><CheckCircle size={19} />{d}</li>)}</ul>}
         <p className="price-note">Точную цену для вашей машины назовём после осмотра.</p>
-        <Callback compact service={modal.service.name} title="Узнать цену для вашей машины" text="Оставьте номер — перезвоним и скажем, сколько это будет стоить." onPrivacy={() => setPrivacy(true)} />
+        <Callback compact service={modal.service.name} title="Узнать цену для вашей машины" text="Оставьте номер — перезвоним и скажем, сколько это будет стоить." />
         <button className="text-link dialog-more" onClick={() => setModal({ type: 'lead', service: modal.service.name })}>Описать проблему подробнее<ArrowRight size={18} /></button>
-      </> : <LeadForm key={modal.service} service={modal.service} consultation={modal.consultation} onPrivacy={() => setPrivacy(true)} />}
+      </> : <LeadForm key={modal.service} service={modal.service} consultation={modal.consultation} />}
     </Dialog>}
-    {privacy && <Dialog title="Обработка обращения" onClose={() => setPrivacy(false)}><div className="privacy-text">
-      <p>Форма предназначена для связи с автосервисом The Big One Garage: {address}.</p>
-      <p>Телефон, сведения об автомобиле и текст обращения используются для ответа на вопрос и согласования визита. Вместе с обращением передаются страница отправки и метки рекламного источника, если они есть.</p>
-      <p>Обращение направляется на email сервиса: <a href="mailto:thebigonegarage@bk.ru">thebigonegarage@bk.ru</a>. Не указывайте паспортные, платёжные и другие данные, не нужные для обсуждения ремонта.</p>
-      <p>По вопросам обработки и удаления данных обращайтесь по этому же адресу. Согласие на рекламные рассылки эта форма не запрашивает.</p>
-      <p>Отзывы загружаются с Яндекс Карт, когда вы нажимаете «Читать отзывы»; карта в разделе «Контакты» — при прокрутке до неё. При переходе на карты и в мессенджеры действуют правила соответствующего сервиса.</p>
-      {site.metrikaId && <p>Сайт использует Яндекс Метрику: она собирает обезличенные данные о посещениях, чтобы мы понимали, удобен ли сайт.</p>}
-    </div></Dialog>}
   </>;
 }

@@ -1,3 +1,4 @@
+import { personalDataPages } from './personal-data.js';
 /* Search pages: one page per direction of the price list, each with its own heading, title and
    description, so a query like «замена колодок Соколиная Гора» lands on the matching prices. */
 import catalog from './data/services.json';
@@ -61,5 +62,6 @@ export function pageOf(path = '/') {
   const match = path.match(/\/uslugi\/([a-z0-9-]+)\.html$/);
   if (match && directionBySlug(match[1])) return { type: 'direction', direction: directionBySlug(match[1]) };
   if (path.endsWith('/prices.html')) return { type: 'prices' };
-  return { type: 'home' };
+  const document = Object.keys(personalDataPages).find(key => path.endsWith('/' + personalDataPages[key].path));
+  return document ? { type: 'legal', document } : { type: 'home' };
 }

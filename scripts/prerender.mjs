@@ -5,6 +5,7 @@
    Every address comes from site.json → siteUrl, so moving to another domain is one edit there. */
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { personalDataPages } from '../src/personal-data.js';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -71,6 +72,13 @@ for (const direction of directions) {
   urls.push(page({
     file: direction.path, route: direction.path, title: direction.title, description: direction.description,
     ld: [breadcrumbs([['Главная', siteUrl], ['Цены', siteUrl + 'prices.html'], [direction.name, siteUrl + direction.path]]), offers(direction.name, direction.groups.flatMap(group => group.rows))],
+  }));
+}
+
+for (const { path: route, title } of Object.values(personalDataPages)) {
+  urls.push(page({
+    file: route, route, title: `${title} | The Big One Garage`,
+    description: `${title} посетителей сайта автосервиса The Big One Garage.`,
   }));
 }
 

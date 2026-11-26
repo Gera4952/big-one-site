@@ -2,7 +2,10 @@ import site from './data/site.json';
 
 export { site };
 export const whatsappUrl = site.whatsapp ? `https://wa.me/${String(site.whatsapp).replace(/\D/g, '')}` : null;
-export const telegramUrl = site.telegram ? `https://t.me/${String(site.telegram).replace(/^@/, '')}` : null;
+const telegramPhone = String(site.telegramPhone || '').replace(/\D/g, '');
+export const telegramUrl = /^[1-9]\d{6,14}$/.test(telegramPhone) ? `https://t.me/+${telegramPhone}` : null;
+const maxProfile = String(site.maxProfileUrl || '').trim();
+export const maxUrl = /^https:\/\/max\.ru\/u\/[A-Za-z0-9_-]+\/?$/.test(maxProfile) ? maxProfile : null;
 export const vkUrl = site.vk ? `https://vk.com/${String(site.vk).replace(/^@/, '')}` : null;
 
 /* Opening hours, always in Moscow time whatever the visitor's clock says. */

@@ -6,7 +6,7 @@
 .price-work:first-child { border-top: 0; }
 .price-work:hover { background: var(--surface-2); }
 .price-work > span { font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
-.price-work > strong { font-size: 15px; font-weight: 600; color: var(--red-text); white-space: nowrap; }
+.price-work > strong { font-size: 15px; font-weight: 550; color: var(--red-text); white-space: nowrap; }
 .dialog-content .price-groups { margin-top: 16px; }
 .dialog-content .price-table { background: #111113; }
 

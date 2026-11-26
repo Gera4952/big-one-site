@@ -23,8 +23,8 @@ function structuredData() {
         hasMap: "https://yandex.ru/maps/org/the_big_one_garage/152908357603/",
       };
       if (site.hours?.length) data.openingHoursSpecification = site.hours.map(rule => ({ "@type": "OpeningHoursSpecification", dayOfWeek: rule.days.map(day => DAY[day]), opens: rule.open, closes: rule.close }));
-      const profiles = [site.whatsapp && `https://wa.me/${String(site.whatsapp).replace(/\D/g, "")}`, site.telegram && `https://t.me/${site.telegram}`, site.vk && `https://vk.com/${site.vk}`].filter(Boolean);
-      if (profiles.length) data.sameAs = profiles;
+      const telegramPhone = String(site.telegramPhone || "").replace(/\D/g, "");
+      const profiles = [site.whatsapp && `https://wa.me/${String(site.whatsapp).replace(/\D/g, "")}`, /^[1-9]\d{6,14}$/.test(telegramPhone) && `https://t.me/+${telegramPhone}`, site.vk && `https://vk.com/${site.vk}`].filter(Boolean);
       if (site.rating) data.aggregateRating = { "@type": "AggregateRating", ratingValue: site.rating.value, reviewCount: site.rating.count };
       // Absolute addresses for link previews and search engines; site.siteUrl changes with the domain.
       const url = (process.env.SITE_URL || site.siteUrl || "https://envacrm.ru/big-site/").replace(/\/?$/, "/");
@@ -44,7 +44,7 @@ function structuredData() {
         for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
         k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
     })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=${Number(site.metrikaId)}', 'ym');
-    ym(${Number(site.metrikaId)}, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    ym(${Number(site.metrikaId)}, 'init', {ssr:true, webvisor:false, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
 ` },
         { tag: "noscript", injectTo: "body-prepend", children: `<div><img src="https://mc.yandex.ru/watch/${Number(site.metrikaId)}" style="position:absolute; left:-9999px;" alt="" /></div>` },
       ] : [];
