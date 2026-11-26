@@ -1,3 +1,5 @@
+const pexels = { license: 'Лицензия Pexels', licenseUrl: 'https://www.pexels.com/license/' };
+
 export const directionCopy = {
   'svarochnye-raboty': {
     lead: 'Восстанавливаем пороги, днище и колёсные арки. Если под краской появились пузыри, а металл проминается или уже проржавел насквозь, привезите машину на осмотр.',
@@ -7,7 +9,15 @@ export const directionCopy = {
     question: 'Можно прислать фото до визита?',
     answer: 'Да. Снимите повреждение крупно и сделайте общий кадр, чтобы было видно, где оно находится. По фото сориентируем, что осмотреть в первую очередь. Стоимость согласуем после осмотра машины.',
     related: ['antikor', 'vyhlopnaya-sistema'],
-    image: 'welding',
+    photo: {
+      file: 'service-welding-work.webp',
+      alt: 'Мастер в защитной маске сваривает металл в передней части кузова',
+      credit: {
+        author: 'Anastasia Shuraeva',
+        source: 'https://www.pexels.com/photo/man-repairing-broken-car-8470882/',
+        ...pexels,
+      },
+    },
   },
   'tehnicheskoe-obsluzhivanie': {
     lead: 'Меняем моторное масло и фильтры, проверяем состояние автомобиля по пробегу и регламенту. Если купили машину с пробегом и история ТО неизвестна, поможем составить список работ.',
@@ -61,7 +71,15 @@ export const directionCopy = {
     question: 'Можно узнать цену замены ГРМ по модели машины?',
     answer: 'Укажите год выпуска и двигатель, если знаете. У одной модели бывают разные моторы, и трудоёмкость замены у них различается.',
     related: ['diagnostika-avtomobilya', 'tehnicheskoe-obsluzhivanie', 'toplivnaya-sistema'],
-    photo: { file: 'workshop-720.webp', alt: 'Автомобиль с открытым капотом в мастерской The Big One Garage' },
+    photo: {
+      file: 'service-engine-work.webp',
+      alt: 'Мастер работает со снятым двигателем на ремонтном стенде',
+      credit: {
+        author: 'Artem Podrez',
+        source: 'https://www.pexels.com/photo/a-mechanic-working-on-an-engine-in-an-auto-repair-shop-8986030/',
+        ...pexels,
+      },
+    },
   },
   'otoplenie-i-ohlazhdenie': {
     lead: 'Печка дует холодным, уходит антифриз или растёт температура двигателя? Проверяем систему охлаждения и отопления, меняем радиаторы, термостаты, помпы и патрубки.',
@@ -70,7 +88,15 @@ export const directionCopy = {
     question: 'Что сообщить при записи?',
     answer: 'Скажите, при каких условиях меняется температура и приходится ли доливать антифриз. Уточните, слабо ли дует воздух или поток нормальный, но холодный.',
     related: ['remont-dvigatelya', 'avtoelektrika'],
-    image: 'cooling',
+    photo: {
+      file: 'service-cooling-work.webp',
+      alt: 'Мастер работает с креплением возле радиатора автомобиля',
+      credit: {
+        author: 'svetlana photographer',
+        source: 'https://www.pexels.com/photo/auto-mechanic-repairing-car-with-tools-outdoors-33074473/',
+        ...pexels,
+      },
+    },
   },
   'vyhlopnaya-sistema': {
     lead: 'Устраняем рёв и дребезг из-под машины. Ремонтируем крепления и меняем гофру, резонатор, глушитель и другие части выхлопной системы.',
@@ -79,7 +105,10 @@ export const directionCopy = {
     question: 'Дребезг обязательно идёт из глушителя?',
     answer: 'Похожий звук могут давать крепление выхлопа или теплозащитный экран. Уточним, когда он слышен, и проверим на подъёмнике.',
     related: ['svarochnye-raboty', 'diagnostika-avtomobilya'],
-    image: 'exhaust',
+    photo: {
+      file: 'service-exhaust-work.webp',
+      alt: 'Резка трубы снятого глушителя болгаркой. Иллюстрация',
+    },
   },
   'rulevoe-upravlenie': {
     lead: 'Проверяем рулевое управление при люфте, стуке в поворотах и тугом руле. В прайсе есть работы с рулевой рейкой, тягами, наконечниками и гидроусилителем.',
@@ -88,7 +117,16 @@ export const directionCopy = {
     question: 'Что полезно рассказать о стуке?',
     answer: 'Уточните, слышен ли он на месте при повороте руля, только на кочках или при движении с вывернутыми колёсами.',
     related: ['remont-podveski', 'shinomontazh'],
-    image: 'steering',
+    photo: {
+      file: 'service-steering-work.webp',
+      alt: 'Рулевая рейка с тягами на раме автомобиля во время сборки',
+      credit: {
+        author: 'vipdesilva',
+        source: 'https://commons.wikimedia.org/wiki/File:Car_with_clearly_visible_steering_rack_with_inner_track_rod_and_track_rod_ends.jpg',
+        license: 'CC BY 2.0',
+        licenseUrl: 'https://creativecommons.org/licenses/by/2.0/',
+      },
+    },
   },
   'remont-transmissii': {
     lead: 'Работаем со сцеплением, приводами и коробками передач. Поможем разобраться, если машина трогается рывками, передачи включаются с усилием или в повороте слышен хруст.',
@@ -97,7 +135,16 @@ export const directionCopy = {
     question: 'Какие данные нужны для подбора масла в коробку?',
     answer: 'Назовите марку, модель и год выпуска, а также тип коробки, если он известен. Спецификация масла зависит от модификации.',
     related: ['diagnostika-avtomobilya', 'tehnicheskoe-obsluzhivanie'],
-    image: 'transmission',
+    photo: {
+      file: 'service-transmission-work.webp',
+      alt: 'Разобранное многодисковое сцепление коробки DSG на верстаке',
+      credit: {
+        author: 'Albogex',
+        source: 'https://commons.wikimedia.org/wiki/File:DSG-6_%D0%BC%D0%BE%D0%B4%D1%83%D0%BB%D1%8C_%D1%81%D1%86%D0%B5%D0%BF%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F..jpg',
+        license: 'CC BY-SA 4.0',
+        licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+      },
+    },
   },
   'toplivnaya-sistema': {
     lead: 'Проверяем топливную систему, если мотор плохо заводится, теряет тягу или работает с перебоями. В прайсе есть осмотр системы, замена датчика уровня топлива и промывка бака.',
@@ -106,7 +153,16 @@ export const directionCopy = {
     question: 'Стоит ли заранее покупать бензонасос?',
     answer: 'Дождитесь проверки. Перебои могут быть связаны с питанием насоса или с другим узлом, а деталь подбирается под конкретную модификацию машины.',
     related: ['diagnostika-avtomobilya', 'avtoelektrika', 'remont-dvigatelya'],
-    image: 'fuel',
+    photo: {
+      file: 'service-fuel-work.webp',
+      alt: 'Посадочное место бензонасоса во время его замены',
+      credit: {
+        author: 'Hoikka1',
+        source: 'https://commons.wikimedia.org/wiki/File:Toyota_Tercel_AL20_fuel_pump_replacement.jpg',
+        license: 'CC BY-SA 3.0',
+        licenseUrl: 'https://creativecommons.org/licenses/by-sa/3.0/',
+      },
+    },
   },
   avtoelektrika: {
     lead: 'Ищем причину, если машина не заводится, аккумулятор разряжается или перестали работать фары и стеклоочистители. Проверяем цепи питания, стартер и генератор.',
@@ -115,7 +171,10 @@ export const directionCopy = {
     question: 'Можно приехать с периодической ошибкой?',
     answer: 'Да. Запомните, что именно перестало работать, и по возможности сделайте фото или видео сбоя. Это пригодится, если на месте симптом исчезнет.',
     related: ['diagnostika-avtomobilya', 'avtozvuk'],
-    image: 'electrical',
+    photo: {
+      file: 'service-electrical-work.webp',
+      alt: 'Проверка разъёма жгута проводов под капотом. Иллюстрация',
+    },
   },
   'peretyazhka-salona': {
     lead: 'Перетягиваем руль, сиденья, потолок и дверные вставки. Можно восстановить одну потёртую деталь или обсудить отделку нескольких элементов в одном цвете.',
@@ -142,7 +201,16 @@ export const directionCopy = {
     question: 'Можно оценить обработку без осмотра?',
     answer: 'В прайсе есть ориентир. Итоговую стоимость согласуем по размеру автомобиля, состоянию днища и объёму подготовки.',
     related: ['svarochnye-raboty', 'remont-podveski'],
-    image: 'underbody',
+    photo: {
+      file: 'service-underbody-work.webp',
+      alt: 'Мастер распыляет антикоррозионный состав на днище автомобиля',
+      credit: {
+        author: 'HutchRock',
+        source: 'https://pixabay.com/photos/automobile-under-floor-2861859/',
+        license: 'Лицензия Pixabay',
+        licenseUrl: 'https://pixabay.com/service/license-summary/',
+      },
+    },
   },
   avtozvuk: {
     lead: 'Устанавливаем магнитолы, динамики и усилители. Можно заменить штатное оборудование или собрать систему под уже выбранные компоненты.',

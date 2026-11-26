@@ -19,13 +19,14 @@ const mapWidget = 'https://yandex.ru/map-widget/v1/org/the_big_one_garage/152908
 const trustIcons = { shield: ShieldCheck, eye: Eye, handshake: Handshake, card: CreditCard, chat: ChatCircleDots, star: Star, list: ListChecks, wrench: Wrench, clock: Clock };
 /* Promises the site already makes (steps and form notes); owner-confirmed items from site.json are added after them. */
 const workCount = directions.flatMap(rowsOf).length;
+const photoCredits = directions.filter(({ photo }) => photo?.credit);
 const baseTrust = [
   { icon: 'list', title: `Прайс на ${works(workCount)} есть на сайте` },
   { icon: 'handshake', title: 'Цену называем до начала работ' },
   { icon: 'eye', title: 'Показываем, что сломалось и почему' },
 ];
 const mainServices = [
-  { id: 'modal-412277', title: 'Сварка кузова', text: 'Пороги, днище и арки', image: 'welding' },
+  { id: 'modal-412277', title: 'Сварка кузова', text: 'Пороги, днище и арки', image: 'welding-work' },
   { id: 'modal-412248', title: 'Плановое ТО', text: 'Масло, фильтры и осмотр', image: 'maintenance' },
   { id: 'modal-412250', title: 'Диагностика', text: 'Поиск причины неисправности', image: 'diagnostics' },
   { id: 'modal-412249', title: 'Шиномонтаж', text: 'Замена шин и балансировка', image: 'tires' },
@@ -415,7 +416,17 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
       <div className="footer-col"><b>Контакты</b><a href={phone}>{phoneLabel}</a>{hoursText() && <span>{hoursText()}</span>}<a href={maps} target="_blank" rel="noreferrer">{address}</a><a href="mailto:thebigonegarage@bk.ru">thebigonegarage@bk.ru</a></div>
       <div className="footer-col"><b>Разделы</b><a href={`${BASE}prices.html`}>Все услуги</a>{nav.map(([hash, label]) => <a key={hash} href={`${home ? '' : BASE}${hash}`}>{label}</a>)}</div>
       {(whatsappUrl || telegramUrl || maxUrl || vkUrl) && <div className="footer-col"><b>Мы на связи</b>{whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer">WhatsApp</a>}{telegramUrl && <a href={telegramUrl} target="_blank" rel="noreferrer">Telegram</a>}{maxUrl && <a href={maxUrl} target="_blank" rel="noreferrer">MAX</a>}{vkUrl && <a href={vkUrl} target="_blank" rel="noreferrer">ВКонтакте</a>}<a href={`${maps}reviews/`} target="_blank" rel="noreferrer">Отзывы на Яндекс Картах</a></div>}
-      <div className="footer-legal"><span>© {new Date().getFullYear()} The Big One Garage</span>{Object.values(personalDataPages).map(({ path, title }) => <a key={path} href={BASE + path}>{title}</a>)}</div>
+      <div className="footer-legal">
+        <span>© {new Date().getFullYear()} The Big One Garage</span>
+        {Object.values(personalDataPages).map(({ path, title }) => <a key={path} href={BASE + path}>{title}</a>)}
+        <details className="footer-photo-credits">
+          <summary>Источники фотографий</summary>
+          <p>Снимки кадрированы под страницы услуг.</p>
+          <ul>{photoCredits.map(({ id, catalogTitle, photo: { credit } }) => <li key={id}>
+            {catalogTitle} · <a href={credit.source}>{credit.author}</a> · <a href={credit.licenseUrl}>{credit.license}</a>
+          </li>)}</ul>
+        </details>
+      </div>
     </div></footer>
 
     {modal && <Dialog title={modal.consultation ? 'Задать вопрос мастеру' : 'Узнать стоимость ремонта'} onClose={() => setModal(null)}>
