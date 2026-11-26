@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useId } from 'react';
 import { ArrowUpRight, ArrowRight, Phone, MapPin, List, X, CheckCircle, CaretDown, MagnifyingGlass, ChatCircleDots, WhatsappLogo, TelegramLogo, Star, Clock, ShieldCheck, Eye, Handshake, CreditCard, MapTrifold, ListChecks, Wrench, PencilSimple } from '@phosphor-icons/react';
-import { FullPriceList, DirectionPrices } from './components/FullPriceList.jsx';
+import { ServiceCatalog, DirectionPrices } from './components/FullPriceList.jsx';
 import { PersonalData } from './components/PersonalData.jsx';
 import { consentVersion, personalDataPages } from './personal-data.js';
 import { LeadCaptcha } from './components/LeadCaptcha.jsx';
@@ -320,7 +320,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
     </header>
 
     <main id="main">{page.type === 'legal' ? <PersonalData document={page.document} />
-      : page.type === 'prices' ? <FullPriceList onSelect={ask} />
+      : page.type === 'prices' ? <ServiceCatalog onSelect={ask} />
       : page.type === 'direction' ? <DirectionPrices direction={page.direction} onSelect={ask} contact={contact} /> : <>
       <section className="hero wrap">
         <div className="hero-copy">

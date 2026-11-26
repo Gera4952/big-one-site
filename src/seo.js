@@ -3,6 +3,7 @@ import { personalDataPages } from './personal-data.js';
    description, so a query like «замена колодок Соколиная Гора» lands on the matching prices. */
 import catalog from './data/services.json';
 import { directionCopy } from './data/direction-copy.js';
+import { serviceCatalog } from './data/service-catalog.js';
 
 const AREA = 'на Соколиной Горе';
 const categoryRoutes = {
@@ -21,13 +22,22 @@ const categoryRoutes = {
 
 export const rowsOf = (category) => category.groups.flatMap(group => group.rows);
 const amount = (price) => Number(String(price).replace(/\D/g, '')) || 0;
-export const minPrice = (category) => { const values = rowsOf(category).map(row => amount(row.price)).filter(Boolean); return values.length ? Math.min(...values) : 0; };
+const catalogInfo = new Map(serviceCatalog.flatMap(section => section.services.map(item => [item.slug, item])));
+function startingPrice(groups, quote) {
+  const values = groups
+    .filter(group => !quote?.group || group.name === quote.group)
+    .flatMap(group => group.rows)
+    .filter(row => !quote?.row || row.name === quote.row)
+    .map(row => amount(row.price))
+    .filter(Boolean);
+  return values.length ? Math.min(...values) : 0;
+}
 /* "1 работа", "24 работы", "233 работы", "36 работ" */
 export const works = (n) => { const a = n % 10, b = n % 100; return `${n} ${a === 1 && b !== 11 ? 'работа' : a >= 2 && a <= 4 && (b < 12 || b > 14) ? 'работы' : 'работ'}`; };
 
 const categoriesWithPages = catalog.categories.map(category => {
   const [slug, h1] = categoryRoutes[category.id];
-  return { ...category, slug, h1, from: minPrice(category) };
+  return { ...category, slug, h1 };
 });
 
 const bodyRepairs = ['Сварка и ремонт порогов', 'Сварка и ремонт днища', 'Сварка колёсных арок', 'Устранение сквозной коррозии кузова'];
@@ -44,13 +54,18 @@ const individualServices = [
   const welding = slug === 'svarochnye-raboty';
   const rows = [{ name: welding ? 'Мелкие сварочные работы' : service.name, price: service.price }];
   if (welding) rows.push(...bodyRepairs.map(name => ({ name, price: 'После осмотра' })));
-  return { id, name: service.name, slug, h1, groups: [{ name: '', rows }], from: welding ? 0 : amount(service.price) };
+  return { id, name: service.name, slug, h1, groups: [{ name: '', rows }] };
 });
 
 export const directions = [...categoriesWithPages, ...individualServices].map(direction => {
   const copy = directionCopy[direction.slug];
+  const item = catalogInfo.get(direction.slug);
   return {
     ...direction, ...copy,
+    catalogTitle: item.title || direction.h1,
+    catalogDescription: item.description,
+    from: startingPrice(direction.groups, item.quote),
+    priceFor: item.quote?.label || item.quote?.row,
     path: `uslugi/${direction.slug}.html`,
     title: `${direction.h1} ${AREA} | Big One Garage`,
     description: copy.lead,
@@ -59,7 +74,7 @@ export const directions = [...categoriesWithPages, ...individualServices].map(di
 export const directionBySlug = (slug) => directions.find(direction => direction.slug === slug);
 export const directionById = (id) => directions.find(direction => direction.id === id);
 
-/* Which page a path is: home, the full price list, or a direction page. */
+/* Which page a path is: home, the service catalog, or a direction page. */
 export function pageOf(path = '/') {
   const match = path.match(/\/uslugi\/([a-z0-9-]+)\.html$/);
   if (match && directionBySlug(match[1])) return { type: 'direction', direction: directionBySlug(match[1]) };

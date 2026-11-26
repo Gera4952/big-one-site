@@ -13,7 +13,7 @@ const client = path.join(root, 'dist', 'client');
 const entry = path.join(root, 'dist', 'ssr', 'entry-server.js');
 for (const file of [path.join(client, 'index.html'), entry]) if (!existsSync(file)) throw new Error('Prerender input is missing: ' + file);
 
-const { render, directions, faq, site, catalog, works } = await import(pathToFileURL(entry).href);
+const { render, directions, faq, site, catalog } = await import(pathToFileURL(entry).href);
 const base = process.env.SITE_BASE_PATH || '/big-site/';
 // SITE_URL overrides site.json for one build (e.g. the html pack for another domain).
 const siteUrl = (process.env.SITE_URL || site.siteUrl || '').replace(/\/?$/, '/');
@@ -25,7 +25,6 @@ const escape = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').r
 const jsonLd = (data) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 const amount = (price) => Number(String(price).replace(/\D/g, '')) || 0;
 const priceOf = (name) => catalog.services.find(service => service.name === name)?.price;
-const allRows = directions.flatMap(category => category.groups.flatMap(group => group.rows));
 
 function page({ file, route, title, description, ld = [] }) {
   const url = siteUrl + file.replace(/(^|\/)index\.html$/, '');
@@ -79,8 +78,8 @@ urls.push(page({
 }));
 urls.push(page({
   file: 'prices.html', route: 'prices.html',
-  title: `Все услуги и цены — ${works(allRows.length)} | The Big One Garage, Соколиная Гора`,
-  description: `Прайс The Big One Garage в Москве. Найдите цены на ТО, шиномонтаж, сварку кузова, ремонт подвески, тормозов и двигателя. Телефон ${phone}.`,
+  title: `Все услуги автосервиса и цены | The Big One Garage, Соколиная Гора`,
+  description: `Каталог услуг The Big One Garage в Москве. ТО, диагностика, ремонт, кузовные работы и уход за салоном. Стартовые цены и перечни работ по каждому направлению. Телефон ${phone}.`,
   ld: [breadcrumbs([['Главная', siteUrl], ['Все услуги', siteUrl + 'prices.html']])],
 }));
 for (const direction of directions) {

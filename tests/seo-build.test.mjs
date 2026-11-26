@@ -43,6 +43,9 @@ test('service pages have crawlable content, linked prices and a consultation but
   const home = await read('index.html');
   const routes = [...new Set([...catalog.matchAll(/href="\/(uslugi\/[a-z0-9-]+\.html)"/g)].map(match => match[1]))];
   assert.ok(routes.length >= 18);
+  assert.equal([...catalog.matchAll(/class="catalog-service"/g)].length, routes.length);
+  assert.equal([...catalog.matchAll(/class="service-starting-price"><strong>от /g)].length, routes.length);
+  assert.doesNotMatch(catalog, /class="price-work"/);
   assert.doesNotMatch(catalog, /class="lead-form"/);
   assert.doesNotMatch(home, /class="lead-form"/);
   assert.match(home, /<summary>Сколько будет стоить ремонт\?/);
@@ -51,6 +54,7 @@ test('service pages have crawlable content, linked prices and a consultation but
   for (const route of routes) {
     const html = await read(route);
     assert.match(html, /class="direction-lead"/, route);
+    assert.match(html, /class="service-starting-price"><strong>от /, route);
     const photo = html.match(/<figure class="direction-photo"><img src="\/(assets\/[^"]+\.webp)"/);
     assert.ok(photo, `${route} must have a service image`);
     assert.doesNotMatch(html, /Иллюстрация к услуге/, route);

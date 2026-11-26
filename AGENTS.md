@@ -33,3 +33,5 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - New service illustrations show recognizable vehicle details or parts at rest, with no people or depicted repair procedures. Use the actual workshop photos where they fit. Service page images have no visible caption.
 
 - Use the service logo from Big One CRM and align the header with the shared content width. Prefer warm graphite, a single red accent, shop photos, and simple dividers.
+
+- Keep /prices.html as a service directory. Each card has a short description, a starting price drawn from the price list, and a link to the service page. Keep the full price list on the individual service pages.
