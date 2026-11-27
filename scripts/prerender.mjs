@@ -3,6 +3,7 @@
    the home page, the full price list and one page per direction, each with its own title,
    description, canonical address and structured data; then writes sitemap.xml and robots.txt.
    Every address comes from site.json → siteUrl, so moving to another domain is one edit there. */
+import { searchMetadata } from '../src/data/search-metadata.js';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { personalDataPages } from '../src/personal-data.js';
@@ -13,7 +14,7 @@ const client = path.join(root, 'dist', 'client');
 const entry = path.join(root, 'dist', 'ssr', 'entry-server.js');
 for (const file of [path.join(client, 'index.html'), entry]) if (!existsSync(file)) throw new Error('Prerender input is missing: ' + file);
 
-const { render, directions, faq, site, catalog } = await import(pathToFileURL(entry).href);
+const { render, directions, faq, site } = await import(pathToFileURL(entry).href);
 const base = process.env.SITE_BASE_PATH || '/big-site/';
 // SITE_URL overrides site.json for one build (e.g. the html pack for another domain).
 const siteUrl = (process.env.SITE_URL || site.siteUrl || '').replace(/\/?$/, '/');
@@ -24,7 +25,6 @@ if (!template.includes('<div id="root"></div>')) throw new Error('index.html has
 const escape = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const jsonLd = (data) => `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 const amount = (price) => Number(String(price).replace(/\D/g, '')) || 0;
-const priceOf = (name) => catalog.services.find(service => service.name === name)?.price;
 
 function page({ file, route, title, description, ld = [], noindex = false }) {
   const url = siteUrl + file.replace(/(^|\/)index\.html$/, '');
@@ -53,7 +53,7 @@ const serviceData = (direction) => ({
   '@id': siteUrl + direction.path + '#service',
   url: siteUrl + direction.path,
   name: direction.h1,
-  description: direction.description,
+  description: direction.lead,
   provider: { '@id': siteUrl + '#garage' },
   areaServed: { '@type': 'City', name: 'Москва' },
   hasOfferCatalog: {
@@ -67,24 +67,22 @@ const serviceData = (direction) => ({
   },
 });
 
-const phone = '8 916 098 18 91';
-const highlights = [['ТО', priceOf('Техническое обслуживание')], ['диагностика', priceOf('Диагностика')]].filter(([, p]) => p).map(([n, p]) => `${n} ${p}`).join(', ');
 const urls = [];
 urls.push(page({
   file: 'index.html', route: '',
-  title: 'Автосервис на Соколиной Горе, Москва — The Big One Garage',
-  description: `ТО, сварка порогов и днища, диагностика и ремонт автомобилей на Соколиной Горе в Москве. ${highlights}. Телефон ${phone}.`,
+  ...searchMetadata.home,
   ld: [{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) }],
 }));
 urls.push(page({
   file: 'prices.html', route: 'prices.html',
-  title: `Все услуги автосервиса и цены | The Big One Garage, Соколиная Гора`,
-  description: `Каталог услуг The Big One Garage в Москве. ТО, диагностика, ремонт, кузовные работы и уход за салоном. Стартовые цены и перечни работ по каждому направлению. Телефон ${phone}.`,
+  ...searchMetadata.prices,
   ld: [breadcrumbs([['Главная', siteUrl], ['Все услуги', siteUrl + 'prices.html']])],
 }));
 for (const direction of directions) {
+  const metadata = searchMetadata[direction.slug];
   urls.push(page({
-    file: direction.path, route: direction.path, title: direction.title, description: direction.description,
+    file: direction.path, route: direction.path,
+    title: `${metadata.title} | Big One Garage`, description: metadata.description,
     ld: [breadcrumbs([['Главная', siteUrl], ['Все услуги', siteUrl + 'prices.html'], [direction.name, siteUrl + direction.path]]), serviceData(direction)],
   }));
 }
