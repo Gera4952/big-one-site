@@ -40,13 +40,38 @@ const directionLink = (id) => `${BASE}${directionById(id)?.path || `prices.html#
 const ratingText = site.rating ? `${Number(site.rating.value).toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}` : null;
 const reviewWord = (n) => { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? 'отзыв' : a >= 2 && a <= 4 && (b < 12 || b > 14) ? 'отзыва' : 'отзывов'; };
 
-/* Responsive photo from public/assets: <name>-720 and <name>-<full> in WebP with a JPEG fallback. */
+/* Responsive AVIF with WebP and JPEG fallbacks. */
 function Photo({ name, full, width, height, sizes = '100vw', alt, className = '', priority = false }) {
   const set = (ext) => `${BASE}assets/${name}-720.${ext} 720w, ${BASE}assets/${name}-${full}.${ext} ${full}w`;
   return <picture className={className}>
+    <source type="image/avif" srcSet={`${BASE}assets/${name}-480.avif 480w, ${set('avif')}`} sizes={sizes} />
     <source type="image/webp" srcSet={set('webp')} sizes={sizes} />
     <img src={`${BASE}assets/${name}-${full}.jpg`} srcSet={set('jpg')} sizes={sizes} width={width} height={height} alt={alt} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : 'auto'} decoding="async" />
   </picture>;
+}
+
+function ContactMap() {
+  const card = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (typeof IntersectionObserver !== 'function') {
+      setVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setVisible(true);
+      observer.disconnect();
+    });
+    observer.observe(card.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return <figure ref={card} className="map-card">
+    {visible ? <iframe title="The Big One Garage на Яндекс Картах" src={mapWidget} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /> : <div className="map-placeholder" aria-hidden="true" />}
+    <figcaption><a href={maps} target="_blank" rel="noreferrer"><MapTrifold size={18} />Открыть маршрут в Яндекс Картах<ArrowUpRight size={16} /></a></figcaption>
+  </figure>;
 }
 
 function Brand() {
@@ -430,7 +455,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
               <h2 id="masters-title">Как проходит ремонт</h2>
               <ol className="steps" role="list">{steps.map(([title, text]) => <li key={title}><div><h3>{title}</h3><p>{text}</p></div></li>)}</ol>
             </div>
-            <figure className="about-photo"><Photo name="workshop" full={1280} width={1280} height={853} sizes="(max-width: 759px) calc(100vw - 32px), (max-width: 1300px) 50vw, 620px" alt="Рабочая зона автосервиса Big One Garage" /><figcaption>Мастерская Big One Garage на Соколиной Горе</figcaption></figure>
+            <figure className="about-photo"><Photo name="workshop" full={1280} width={1280} height={853} sizes="(max-width: 759px) calc(100vw - 32px), (max-width: 1300px) 50vw, 620px" alt="Рабочая зона автосервиса Big One Garage" /></figure>
           </section>
         </div>
       </section>
@@ -456,10 +481,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
             <button className="button primary contact-cta" type="button" onClick={() => ask()}>Оставить заявку<ArrowUpRight size={20} /></button>
             {!site.hours?.length && <p className="form-note">Время визита уточняйте по телефону.</p>}
           </div>
-          <figure className="map-card">
-            <iframe title="The Big One Garage на Яндекс Картах" src={mapWidget} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen />
-            <figcaption><a href={maps} target="_blank" rel="noreferrer"><MapTrifold size={18} />Открыть маршрут в Яндекс Картах<ArrowUpRight size={16} /></a></figcaption>
-          </figure>
+          <ContactMap />
         </div>
       </section>
     </>}</main>

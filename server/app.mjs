@@ -51,7 +51,7 @@ export function createApp({env=process.env,sendMail,now=Date.now}={}){
    const relative=decodeURIComponent(url.pathname.slice(prefix.length))||'index.html';const path=resolve(root,relative);
    if(!path.startsWith(root+sep)||relative.split('/').some(p=>p.startsWith('.')))return json(res,404,{error:'Страница не найдена.'});
    const info=await stat(path);if(!info.isFile())return json(res,404,{error:'Страница не найдена.'});
-   const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.json':'application/json; charset=utf-8','.woff2':'font/woff2','.svg':'image/svg+xml','.txt':'text/plain; charset=utf-8','.xml':'application/xml; charset=utf-8'};
+   const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.avif':'image/avif','.json':'application/json; charset=utf-8','.woff2':'font/woff2','.svg':'image/svg+xml','.txt':'text/plain; charset=utf-8','.xml':'application/xml; charset=utf-8'};
    res.writeHead(200,{'Content-Type':types[extname(path)]||'application/octet-stream','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin','Cache-Control':extname(path)==='.html'?'no-cache':'public, max-age=3600'});res.end(req.method==='HEAD'?undefined:await readFile(path));
   }catch(error){if(!res.headersSent)json(res,error.code==='ENOENT'?404:500,{error:'Не удалось обработать запрос.'});else res.end();}
  });

@@ -2,6 +2,7 @@ AddDefaultCharset UTF-8
 DirectoryIndex index.html
 ErrorDocument 404 /404.html
 AddType image/webp .webp
+AddType image/avif .avif
 AddType font/woff2 .woff2
 
 <IfModule mod_rewrite.c>
@@ -26,7 +27,15 @@ AddType font/woff2 .woff2
   ExpiresByType text/html "access plus 0 seconds"
   ExpiresByType image/jpeg "access plus 7 days"
   ExpiresByType image/webp "access plus 7 days"
+  ExpiresByType image/avif "access plus 7 days"
   ExpiresByType image/png "access plus 7 days"
   ExpiresByType image/svg+xml "access plus 7 days"
   ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
+
+# Vite changes the file name whenever these assets change.
+<IfModule mod_headers.c>
+  <FilesMatch "^index-[A-Za-z0-9_-]{8}\.(js|css)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
 </IfModule>

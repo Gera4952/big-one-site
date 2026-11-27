@@ -293,7 +293,7 @@ dialog::backdrop { background: rgba(0, 0, 0, .7); -webkit-backdrop-filter: blur(
 .contact-entry { margin: 4px 0 10px; padding: 14px 16px; border-radius: var(--radius-sm); background: var(--red-soft); color: #ffe1de; font-size: 14px; line-height: 1.5; }
 .contact-entry b { color: #fff; }
 .map-card { margin: 4px 0 10px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
-.map-card iframe { display: block; width: 100%; height: 320px; border: 0; background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .025) 0 12px, transparent 12px 24px); }
+.map-card :is(iframe, .map-placeholder) { display: block; width: 100%; height: 320px; border: 0; background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .025) 0 12px, transparent 12px 24px); }
 .map-card figcaption { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 12px 16px; border-top: 1px solid var(--line); font-size: 13px; line-height: 1.4; color: var(--muted); }
 .map-card figcaption > svg { color: var(--red-text); flex: 0 0 auto; }
 .map-card figcaption span { flex: 1; min-width: 12em; }
@@ -316,7 +316,7 @@ dialog::backdrop { background: rgba(0, 0, 0, .7); -webkit-backdrop-filter: blur(
   .messengers { max-width: 520px; }
   .trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
   .quotes { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
-  .map-card iframe { height: 380px; }
+  .map-card :is(iframe, .map-placeholder) { height: 380px; }
 }
 @media (min-width: 1100px) { .trust-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .trust-item { flex-direction: column; } }
 
@@ -557,7 +557,6 @@ input[aria-invalid=true] { border-color: #ff7a73 !important; }
 .about-copy .steps { margin-top: 16px; }
 .about-copy .steps li { border-top: 1px solid var(--line); padding-block: 12px; }
 .about-copy .steps p { margin-top: 4px; }
-.about-photo figcaption { margin-top: 8px; color: var(--muted); font-size: 13px; }
 @media (max-width: 759px) {
   .hero { padding-bottom: 20px; }
   .hero-photo { aspect-ratio: 2.2 / 1; }
