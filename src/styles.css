@@ -471,18 +471,21 @@ input[aria-invalid=true] { border-color: #ff7a73 !important; }
 }
 
 /* Акция (site.json → promo) */
-.promo { padding-top: 18px; }
-.promo-card { display: grid; gap: 12px; padding: 16px; border-left: 3px solid var(--red); background: var(--surface); }
-.promo-copy .eyebrow { display: block; margin-bottom: 5px; font-size: 13px; letter-spacing: 0; text-transform: none; }
-.promo-copy h2 { margin-bottom: 7px; font-size: clamp(18px, 4.7vw, 20px); line-height: 1.25; }
+.promo {
+  padding-block: clamp(34px, 5vw, 56px);
+  background: #2c201e;
+  border-block: 1px solid #64403a;
+}
+.promo-inner { display: grid; gap: 20px; }
+.promo-copy .eyebrow { display: block; margin-bottom: 8px; font-size: 13px; letter-spacing: .08em; }
+.promo-copy h2 { max-width: 30ch; margin-bottom: 10px; font-size: clamp(23px, 4.9vw, 36px); line-height: 1.16; }
 .promo-copy p { max-width: 65ch; font-size: 15px; color: var(--muted); }
 .promo-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; margin-top: 8px; }
 .promo-price b { color: var(--red-text); }
 .promo-note { display: block; margin-top: 6px; font-size: 13px; color: var(--muted); }
-.promo-actions .button { min-height: 46px; }
+.promo-actions .button { min-height: 48px; text-align: left; }
 @media (min-width: 760px) {
-  .promo-card { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 22px; padding: 22px 24px; }
-  .promo-copy h2 { font-size: clamp(21px, 2.4vw, 28px); }
+  .promo-inner { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 32px; }
 }
 
 /* Consultation offers direct contact before asking for vehicle details. */
@@ -565,3 +568,13 @@ input[aria-invalid=true] { border-color: #ff7a73 !important; }
   .lead-form > label, .lead-fields-grid label { padding-bottom: 0; }
   .lead-fields-grid { row-gap: 10px; }
 }
+
+
+/* Home sections share the same rhythm and read as distinct blocks. */
+.home-page > .section,
+.home-page > .trust {
+  padding-block: clamp(32px, 4.4vw, 56px);
+  border-top: 1px solid var(--line-strong);
+}
+.home-page > .promo + .about { border-top: 0; }
+.home-page > .trust h2 { margin-bottom: 12px; }

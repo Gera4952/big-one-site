@@ -18,6 +18,11 @@ const searchForms = [
 const searchTerms = text => (normalize(text).match(/[a-zа-я0-9]+/g) || []).map(word =>
   searchForms.find(([pattern]) => pattern.test(word))?.[1] || word
 );
+function matchesTerms(text, terms) {
+  if (!terms.length) return true;
+  const words = searchTerms(text);
+  return terms.every(term => words.some(word => /^r\d+$/.test(term) ? word === term : word.includes(term)));
+}
 const workId = (groupIndex, rowIndex) => `work-${groupIndex + 1}-${rowIndex + 1}`;
 
 const catalogSections = serviceCatalog.map(({ id, title, navTitle, services }) => ({
@@ -33,10 +38,7 @@ function StartingPrice({ direction }) {
 
 function matchingService(direction, terms) {
   if (!terms.length) return { direction };
-  const matches = (text) => {
-    const words = searchTerms(text);
-    return terms.every(term => words.some(word => word.includes(term)));
-  };
+  const matches = text => matchesTerms(text, terms);
   const serviceLabel = `${direction.catalogTitle} ${direction.h1} ${direction.name}`;
   let fallback;
   for (const [groupIndex, group] of direction.groups.entries()) {
@@ -60,13 +62,48 @@ function matchingService(direction, terms) {
   return fallback || null;
 }
 
-export function PriceRows({ groups, category, onSelect }) {
-  return <div className="price-groups">{groups.map((group, i) => <div className="price-group" key={`${group.name}-${i}`}>
-    {group.name && <h3>{group.name.replace(/:\s*$/, '')}</h3>}
-    <div className="price-table">{group.rows.map((row, j) => <button type="button" key={`${row.name}-${j}`} className="price-work" id={workId(i, j)} onClick={() => onSelect([category, group.name.replace(/:\s*$/, ''), row.name].filter((part, index, parts) => part && parts.indexOf(part) === index).join(' — '))} aria-label={`${row.name}: ${row.price}. Обсудить работу`}>
-      <span>{row.name.replace(/\s+[-–]\s+/g, ' — ')}</span><strong>{row.price}</strong>
-    </button>)}</div>
-  </div>)}</div>;
+function DirectionPriceList({ direction, onSelect, priceList }) {
+  const [query, setQuery] = useState('');
+  const input = useRef(null);
+  const terms = searchTerms(query);
+  const groups = direction.groups.map((group, groupIndex) => ({
+    ...group,
+    groupIndex,
+    rows: group.rows.map((row, rowIndex) => ({ ...row, id: workId(groupIndex, rowIndex) }))
+      .filter(row => matchesTerms(`${group.name} ${row.name}`, terms)),
+  })).filter(group => group.rows.length);
+  const total = rowsOf(direction).length;
+  const count = groups.reduce((sum, group) => sum + group.rows.length, 0);
+
+  const list = <div className="price-groups">{groups.map(group => {
+    const groupName = group.name.replace(/:\s*$/, '');
+    return <div className="price-group" key={group.groupIndex}>
+      {groupName && <h3>{groupName}</h3>}
+      <div className="price-table">{group.rows.map(row => {
+        const name = row.name.replace(/\s+[-–]\s+/g, ' — ');
+        const work = [...new Set([direction.name, groupName, name].filter(Boolean))].join(' — ');
+        return <button type="button" key={row.id} className="price-work" id={row.id}
+          onClick={() => onSelect(work)} aria-label={`${name}: ${row.price}. Уточнить цену`}>
+          <span>{name}</span><strong>{row.price}</strong><ArrowUpRight size={15} aria-hidden="true" />
+        </button>;
+      })}</div>
+    </div>;
+  })}</div>;
+
+  if (total <= 12) return list;
+  return <details className="price-expander" ref={priceList} open>
+    <summary>Прайс · {works(total)}<CaretDown size={17} aria-hidden="true" /></summary>
+    <div className="price-search" role="search">
+      <MagnifyingGlass size={20} aria-hidden="true" />
+      <label className="sr-only" htmlFor="direction-search">Поиск по этому прайсу</label>
+      <input id="direction-search" ref={input} type="search" placeholder={direction.path.endsWith('/shinomontazh.html') ? 'Например, R16' : 'Найти работу'} value={query}
+        onChange={event => setQuery(event.target.value)} />
+      {query && <button className="icon-button" type="button" aria-label="Очистить поиск по прайсу"
+        onClick={() => { setQuery(''); input.current?.focus(); }}><X size={18} /></button>}
+    </div>
+    {terms.length > 0 && <p className="price-count" role="status">{count ? `Найдено: ${works(count)}` : 'Работ по этому запросу нет'}</p>}
+    {count > 0 && list}
+  </details>;
 }
 
 export function ServiceCatalog({ onSelect }) {
@@ -94,7 +131,6 @@ export function ServiceCatalog({ onSelect }) {
   return <section className="price-page service-catalog wrap" id="prices">
     <nav className="breadcrumbs" aria-label="Хлебные крошки"><a href={BASE}>Главная</a><span aria-hidden="true">/</span><span aria-current="page">Все услуги</span></nav>
     <h1>Все услуги и цены</h1>
-    <p className="section-intro">Выберите услугу, чтобы посмотреть работы и цены.</p>
     <div className="price-tools">
       <div className="price-search" role="search"><MagnifyingGlass size={20} aria-hidden="true" /><label className="sr-only" htmlFor="catalog-search">Поиск по услугам и работам</label>
         <input id="catalog-search" type="search" ref={searchInput} value={query} onChange={event => changeQuery(event.target.value)} placeholder="Например, колодки или ГРМ" />
@@ -124,7 +160,7 @@ export function ServiceCatalog({ onSelect }) {
     <div className="catalog-help">
       <div>
         <h2>{count ? 'Не знаете, какую услугу выбрать?' : 'По запросу ничего не нашли'}</h2>
-        <p>Опишите, что происходит с машиной. Мастер подскажет, с какой проверки начать.</p>
+        <p>{count ? 'Расскажите, что беспокоит в машине.' : 'Попробуйте название детали или работы.'}</p>
       </div>
       <button className="button secondary" type="button" onClick={() => onSelect(count ? '' : query.trim(), true)}>Задать вопрос мастеру<ArrowUpRight size={18} aria-hidden="true" /></button>
     </div>
@@ -140,7 +176,6 @@ export function DirectionPrices({ direction, onSelect, contact }) {
     const row = document.getElementById(hash.slice(1));
     if (row) row.scrollIntoView({ behavior: 'instant', block: 'start' });
   }, []);
-  const rows = rowsOf(direction);
   const related = direction.related.map(directionBySlug);
   const media = direction.photo || { file: `service-${direction.image}.webp`, alt: '' };
   const consult = () => onSelect(direction.name, true);
@@ -168,13 +203,8 @@ export function DirectionPrices({ direction, onSelect, contact }) {
       <section id="direction-prices">
         <h2>Работы и цены</h2>
         <p>{direction.priceNote || 'Точную стоимость согласуем перед ремонтом.'}</p>
-        <p className="price-instruction">Нажмите на работу, чтобы уточнить цену для вашей машины.</p>
-        {rows.length > 12
-          ? <details className="price-expander" ref={priceList} open>
-              <summary>Прайс · {works(rows.length)}<CaretDown size={17} /></summary>
-              <PriceRows groups={direction.groups} category={direction.name} onSelect={onSelect} />
-            </details>
-          : <PriceRows groups={direction.groups} category={direction.name} onSelect={onSelect} />}
+        <p className="price-instruction">Чтобы уточнить стоимость, выберите строку прайса.</p>
+        <DirectionPriceList direction={direction} onSelect={onSelect} priceList={priceList} />
       </section>
       <section>
         <h2>{direction.heading}</h2>

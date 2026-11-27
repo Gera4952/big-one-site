@@ -241,10 +241,10 @@ function ChoiceChips({ label, options, value, onChange }) {
   </fieldset>;
 }
 
-/* «Акция» из site.json → promo: одна карточка под первым экраном. Пусто (null) — блока нет. */
+/* The home page offer is rendered only when site.json provides a title. */
 function Promo({ promo, onAsk }) {
-  return <section className="promo wrap" id="promo" aria-labelledby="promo-title">
-    <div className="promo-card">
+  return <section className="promo" id="promo" aria-labelledby="promo-title">
+    <div className="promo-inner wrap">
       <div className="promo-copy">
         {promo.eyebrow && <small className="eyebrow">{promo.eyebrow}</small>}
         <h2 id="promo-title">{promo.title}</h2>
@@ -253,7 +253,7 @@ function Promo({ promo, onAsk }) {
         {promo.note && <small className="promo-note">{promo.note}</small>}
       </div>
       <div className="promo-actions">
-        <button className="button secondary" type="button" onClick={() => onAsk(promo.service || promo.title)}>{promo.button || 'Записаться'}<ArrowUpRight size={20} /></button>
+        <button className="button primary" type="button" onClick={() => onAsk(promo.service || promo.title)}>{promo.button || 'Записаться'}<ArrowUpRight size={20} /></button>
       </div>
     </div>
   </section>;
@@ -367,7 +367,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
       </div>
     </header>
 
-    <main id="main">{page.type === 'legal' ? <PersonalData document={page.document} photoCredits={photoCredits} />
+    <main id="main" className={home ? 'home-page' : undefined}>{page.type === 'legal' ? <PersonalData document={page.document} photoCredits={photoCredits} />
       : page.type === 'prices' ? <ServiceCatalog onSelect={ask} />
       : page.type === 'direction' ? <DirectionPrices direction={page.direction} onSelect={ask} contact={contact} /> : <>
       <section className="hero wrap">
@@ -406,7 +406,8 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
         <p className="services-note">Стоимость для вашей машины согласуем до начала работ.</p>
       </section>
 
-      <section className="trust wrap" id="trust" aria-label="Почему нам доверяют">
+      <section className="trust wrap" id="trust" aria-labelledby="trust-title">
+        <h2 id="trust-title">До начала ремонта</h2>
         <div className="trust-grid">{[...baseTrust, ...(site.trust || [])].map(item => { const Icon = trustIcons[item.icon] || CheckCircle; return <div className="trust-item" key={item.title}><Icon size={24} /><div><h3>{item.title}</h3>{item.text && <p>{item.text}</p>}</div></div>; })}</div>
         <a className="trust-reviews" href="#reviews">{site.rating ? <><Star size={18} weight="fill" /><b>{ratingText}</b>{site.rating.count} {reviewWord(site.rating.count)} на Яндекс Картах</> : <><Star size={18} weight="fill" />Читать отзывы клиентов на Яндекс Картах</>}<ArrowRight size={16} /></a>
       </section>

@@ -2,7 +2,7 @@
 .price-groups { display: grid; gap: 14px; }
 .price-group h3 { margin: 4px 0 8px; font-size: 14px; font-weight: 500; line-height: 1.45; letter-spacing: 0; color: var(--muted); }
 .price-table { border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--line); overflow: hidden; }
-.price-work { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; width: 100%; min-height: 52px; padding: 12px 14px; text-align: left; border-top: 1px solid var(--line); }
+.price-work { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 14px; width: 100%; min-height: 52px; padding: 12px 14px; text-align: left; border-top: 1px solid var(--line); }
 .price-work:first-child { border-top: 0; }
 .price-work:focus-visible { outline-offset: -3px; }
 .price-work > span { font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
@@ -123,3 +123,12 @@
 .catalog-match strong { display: block; margin-top: 3px; color: var(--red-text); }
 .price-instruction { margin-top: 6px; font-size: 14px; }
 .price-work:target { background: var(--surface-2); box-shadow: inset 3px 0 var(--red-text); }
+
+
+.price-work > svg { color: var(--muted); }
+.price-expander .price-search { max-width: 440px; }
+.price-expander .price-groups { margin-top: 12px; }
+@media (max-width: 759px) {
+  .direction-photo img { aspect-ratio: 2 / 1; }
+  .direction-hero { padding-bottom: 8px; }
+}

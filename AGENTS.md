@@ -34,6 +34,6 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 
 - Use the service logo from Big One CRM and align the header with the shared content width. Prefer warm graphite, a single red accent, shop photos, and simple dividers.
 
-- Keep /prices.html as a service directory. Each card has a short description, a starting price drawn from the price list, and a link to the service page. Keep the full price list on the individual service pages.
+- Keep /prices.html as a service directory. Keep the illustrated service cards in the catalog. Each card has a thumbnail, a short description, a starting price drawn from the price list, and a link to the service page. Keep the full price list on the individual service pages.
 
 - 2026-11-27 UX refinement: avoid generic AI landing-page patterns (repeated oversized image grids, decorative badges, vague expertise claims). Keep the existing graphite/red identity. Home services use compact rows with prices and the exact work each starting price covers. Consultation opens direct phone/messenger choices plus an optional callback form; vehicle details required by the lead API remain required. Optional plate and visit time are disclosed separately. Service price lists are expanded by default.
