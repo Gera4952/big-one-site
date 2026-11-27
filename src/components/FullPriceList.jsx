@@ -206,14 +206,14 @@ export function DirectionPrices({ direction, onSelect, contact }) {
         <p className="price-instruction">Чтобы уточнить стоимость, выберите строку прайса.</p>
         <DirectionPriceList direction={direction} onSelect={onSelect} priceList={priceList} />
       </section>
-      <section>
+      {direction.heading && direction.text && <section>
         <h2>{direction.heading}</h2>
         <p>{direction.text}</p>
-      </section>
-      <section>
+      </section>}
+      {direction.question && direction.answer && <section>
         <h2>{direction.question}</h2>
         <p>{direction.answer}</p>
-      </section>
+      </section>}
     </div>
     <section className="direction-contact">
       <div>

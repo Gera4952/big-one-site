@@ -28,7 +28,7 @@ const baseTrust = [
 ];
 const mainServices = [
   { id: 'modal-412277', title: 'Сварка кузова', text: 'Пороги, днище и арки', image: 'welding' },
-  { id: 'modal-412248', title: 'Плановое ТО', text: 'Масло, фильтры и осмотр', image: 'maintenance' },
+  { id: 'modal-412248', title: 'Техническое обслуживание', text: 'Масло, фильтры и осмотр', image: 'maintenance' },
   { id: 'modal-412250', title: 'Диагностика', text: 'Поиск причины неисправности', image: 'diagnostics' },
   { id: 'modal-412249', title: 'Шиномонтаж', text: 'Замена шин и балансировка', image: 'tires' },
   { id: 'modal-412321', title: 'Ремонт подвески', text: 'Амортизаторы, рычаги и ступицы', image: 'suspension' },
@@ -399,7 +399,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
         <div className="hero-copy">
           {site.rating && <a className="hero-rating" href="#reviews"><Star size={18} weight="fill" /><b>{ratingText}</b><span>{site.rating.count} {reviewWord(site.rating.count)} на Яндекс Картах</span></a>}
           <p className="hero-location">Автосервис на Соколиной Горе</p>
-          <h1>Ремонт и ТО автомобилей</h1>
+          <h1>Ремонт и обслуживание автомобилей</h1>
           <p className="hero-intro">Диагностика, ремонт и сварка кузова. Работаем с любыми марками.</p>
           <div className="hero-actions">
             <button className="button primary" onClick={() => ask('', true)}>Консультация<ArrowUpRight size={20} /></button>

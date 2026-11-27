@@ -3,7 +3,7 @@ export const serviceCatalog = [
     id: 'maintenance',
     title: 'ТО и диагностика',
     services: [
-      { slug: 'tehnicheskoe-obsluzhivanie', title: 'Плановое ТО', description: 'Замена масла и фильтров, проверки по пробегу.' },
+      { slug: 'tehnicheskoe-obsluzhivanie', title: 'Техническое обслуживание', description: 'Замена масла и фильтров, проверки по пробегу.' },
       { slug: 'diagnostika-avtomobilya', title: 'Диагностика автомобиля', description: 'Поиск причины стука, вибрации или ошибки на панели.' },
       {
         slug: 'shinomontazh', title: 'Шиномонтаж и балансировка', description: 'Сезонная замена шин и ремонт проколов.',
