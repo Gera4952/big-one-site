@@ -244,10 +244,9 @@ function Heading({ eyebrow, title, link }) {
 }
 
 /* `path` is passed when the page is prerendered at build time; in the browser it is the current address. */
-/* Reviews: a dark summary with the rating (when it is filled in site.json) and quotes; the light Yandex widget
-   opens in its own frame only on request, so it does not glare on the dark page. */
+/* Reviews are expanded by default; the visitor can collapse the live Yandex widget. */
 function Reviews() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   return <section className="reviews section wrap" id="reviews">
     <Heading title="Отзывы клиентов" />
     <div className="reviews-panel">
@@ -265,7 +264,7 @@ function Reviews() {
       {site.quotes?.length > 0 && <div className="quotes">{site.quotes.map(quote => <figure className="quote" key={quote.text}><blockquote>«{quote.text}»</blockquote><figcaption>{quote.author} · Яндекс Карты</figcaption></figure>)}</div>}
     </div>
     {open && <div className="review-card" id="reviews-widget">
-      <iframe title="Отзывы The Big One Garage на Яндекс Картах" src="https://yandex.ru/maps-reviews-widget/152908357603?comments" referrerPolicy="strict-origin-when-cross-origin" />
+      <iframe title="Отзывы The Big One Garage на Яндекс Картах" src="https://yandex.ru/maps-reviews-widget/152908357603?comments" loading="lazy" referrerPolicy="strict-origin-when-cross-origin" />
       <a className="review-card-link" href={`${maps}reviews/`} target="_blank" rel="noreferrer">Все отзывы на Яндекс Картах<ArrowUpRight size={16} /></a>
     </div>}
   </section>;

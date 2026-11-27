@@ -15,7 +15,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Reference: exec-b907daa2-06d8-4cca-9f26-304b61681171.png.
 - Local-only delivery; user publishes through Git. Initial base path /big-site/, configurable to /.
 - Leads go to the service email thebigonegarage@bk.ru via server SMTP, never simulated success.
-- Reviews use Yandex organization 152908357603 with original-source link.
+- Reviews use Yandex organization 152908357603 with original-source link. Show the reviews widget expanded by default on the home page, keep the collapse control and the link to all Yandex Maps reviews.
 - Hero keeps the generated illustration (owner's choice, 2026-10-20), not a photograph of the actual business. Real owner-supplied photos: workshop-* and body-* in «Как мы работаем», entrance-* in contacts.
 
 - Emphasize service for all vehicle makes, models and years; use symptom-based entry points and plain-language explanations before the detailed price list.
