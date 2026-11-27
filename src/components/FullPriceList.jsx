@@ -24,12 +24,11 @@ function matchingService(direction, terms) {
     return terms.every(term => label.includes(term));
   };
   const serviceLabel = `${direction.catalogTitle} ${direction.h1} ${direction.name}`;
-  if (matches(`${serviceLabel} ${direction.catalogDescription}`)) return { direction };
   for (const group of direction.groups) {
     const work = group.rows.find(row => matches(`${serviceLabel} ${group.name} ${row.name}`));
     if (work) return { direction, work, group: group.name.replace(/:\s*$/, '') };
   }
-  return null;
+  return matches(`${serviceLabel} ${direction.catalogDescription}`) ? { direction } : null;
 }
 
 export function PriceRows({ groups, category, onSelect }) {
@@ -75,7 +74,7 @@ export function ServiceCatalog({ onSelect }) {
             <div className="catalog-service-copy">
               <h3>{direction.catalogTitle}</h3>
               <p>{direction.catalogDescription}</p>
-              <StartingPrice direction={direction} />
+              {!work && <StartingPrice direction={direction} />}
               {work && <p className="catalog-match">{[group, work.name, work.price].filter(Boolean).join(' · ')}</p>}
             </div>
             <ArrowRight className="catalog-service-arrow" size={17} aria-hidden="true" />
@@ -131,8 +130,8 @@ export function DirectionPrices({ direction, onSelect, contact }) {
         <h2>Работы и цены</h2>
         <p>{direction.priceNote || 'В прайсе указаны ориентиры. Сумму для вашей машины согласуем перед ремонтом.'}</p>
         {rows.length > 12
-          ? <details className="price-expander" ref={priceList}>
-              <summary>Открыть прайс · {works(rows.length)}<CaretDown size={17} /></summary>
+          ? <details className="price-expander" ref={priceList} open>
+              <summary>Прайс · {works(rows.length)}<CaretDown size={17} /></summary>
               <PriceRows groups={direction.groups} category={direction.name} onSelect={onSelect} />
             </details>
           : <PriceRows groups={direction.groups} category={direction.name} onSelect={onSelect} />}
@@ -148,7 +147,7 @@ export function DirectionPrices({ direction, onSelect, contact }) {
         <p><a href={contact.maps} target="_blank" rel="noreferrer">{contact.address}</a>{contact.hours && <> · {contact.hours.toLowerCase()}</>}</p>
       </div>
       <div className="direction-actions">
-        <button className="button primary" type="button" onClick={consult}>Оставить заявку<ArrowUpRight size={19} /></button>
+        <button className="button primary" type="button" onClick={() => onSelect(direction.name)}>Оставить заявку<ArrowUpRight size={19} /></button>
         <a className="button secondary" href={contact.phone}><Phone size={18} />{contact.phoneLabel}</a>
       </div>
     </section>

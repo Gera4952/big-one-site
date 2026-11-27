@@ -15,7 +15,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Reference: exec-b907daa2-06d8-4cca-9f26-304b61681171.png.
 - Local-only delivery; user publishes through Git. Initial base path /big-site/, configurable to /.
 - Leads go to the service email thebigonegarage@bk.ru via server SMTP, never simulated success.
-- Reviews use Yandex organization 152908357603 with original-source link. Show the reviews widget expanded by default on the home page, keep the collapse control and the link to all Yandex Maps reviews.
+- Reviews use Yandex organization 152908357603 with original-source link. Show a dark carousel of attributed review summaries on the home page, with three cards on desktop and a link to all Yandex Maps reviews.
 - Hero keeps the generated illustration (owner's choice, 2026-10-20), not a photograph of the actual business. Real owner-supplied photos: workshop-* and body-* in «Как мы работаем», entrance-* in contacts.
 
 - Emphasize service for all vehicle makes, models and years; use symptom-based entry points and plain-language explanations before the detailed price list.
@@ -35,3 +35,5 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - Use the service logo from Big One CRM and align the header with the shared content width. Prefer warm graphite, a single red accent, shop photos, and simple dividers.
 
 - Keep /prices.html as a service directory. Each card has a short description, a starting price drawn from the price list, and a link to the service page. Keep the full price list on the individual service pages.
+
+- 2026-11-27 UX refinement: avoid generic AI landing-page patterns (repeated oversized image grids, decorative badges, vague expertise claims). Keep the existing graphite/red identity. Home services use compact rows with prices and the exact work each starting price covers. Consultation opens direct phone/messenger choices plus an optional callback form; vehicle details required by the lead API remain required. Optional plate and visit time are disclosed separately. Service price lists are expanded by default.

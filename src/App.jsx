@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, useId } from 'react';
-import { ArrowUpRight, ArrowRight, Phone, MapPin, List, X, CheckCircle, CaretDown, MagnifyingGlass, ChatCircleDots, WhatsappLogo, TelegramLogo, Star, Clock, ShieldCheck, Eye, Handshake, CreditCard, MapTrifold, ListChecks, Wrench, PencilSimple } from '@phosphor-icons/react';
+import { ArrowUpRight, ArrowLeft, ArrowRight, Phone, MapPin, List, X, CheckCircle, CaretDown, MagnifyingGlass, ChatCircleDots, WhatsappLogo, TelegramLogo, Star, Clock, ShieldCheck, Eye, Handshake, CreditCard, MapTrifold, ListChecks, Wrench } from '@phosphor-icons/react';
 import { ServiceCatalog, DirectionPrices } from './components/FullPriceList.jsx';
 import { PersonalData } from './components/PersonalData.jsx';
 import { consentVersion, personalDataPages } from './personal-data.js';
 import { LeadCaptcha } from './components/LeadCaptcha.jsx';
 import { directionById, directions, pageOf, rowsOf, works } from './seo.js';
+import { yandexReviews } from './data/yandex-reviews.js';
 import { site, whatsappUrl, telegramUrl, maxUrl, vkUrl, hoursText, openStatus } from './site.js';
 
 const BASE = import.meta.env.BASE_URL;
@@ -196,9 +197,14 @@ function LeadForm({ service = '' }) {
       <label>Марка<input name="make" maxLength={40} required /></label>
       <label>Модель<input name="model" maxLength={50} required /></label>
     </div>
-    <label>Госномер <span className="optional">необязательно</span><input name="plate" autoCapitalize="characters" spellCheck={false} maxLength={20} placeholder="А123ВС 777" /></label>
-    <label>Текст обращения<textarea name="message" placeholder="Например, стучит спереди на кочках" maxLength={2000} rows={3} required /></label>
-    <ChoiceChips label="Когда удобно приехать?" options={visits} value={visit} onChange={setVisit} />
+    <label>Что нужно сделать или что беспокоит?<textarea name="message" placeholder="Например, стучит спереди на кочках" maxLength={2000} rows={3} required /></label>
+    <details className="lead-extra">
+      <summary>Время визита и госномер <span>необязательно</span><CaretDown size={18} /></summary>
+      <div className="lead-extra-fields">
+        <ChoiceChips label="Когда удобно приехать?" options={visits} value={visit} onChange={setVisit} />
+        <label>Госномер<input name="plate" autoCapitalize="characters" spellCheck={false} maxLength={20} placeholder="А123ВС 777" /></label>
+      </div>
+    </details>
     <div className="honeypot" aria-hidden="true"><label>Ваш сайт<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
     <div className="consent">
       <label><input type="checkbox" name="consent" required value="yes" />Даю согласие на обработку персональных данных для ответа на заявку.</label>
@@ -214,11 +220,25 @@ function LeadForm({ service = '' }) {
   </form>;
 }
 
+function Consultation({ service }) {
+  const [showForm, setShowForm] = useState(false);
+  return <div className="consultation">
+    {!showForm && <><p className="consultation-intro">Расскажите, что случилось с машиной. Обсудим работу и стоимость — записываться сразу не обязательно.</p>
+    <a className="consultation-phone" href={phone}><Phone size={22} /><span>{phoneLabel}<small>{hoursText()}</small></span><ArrowUpRight size={19} /></a>
+    <Messengers /></>}
+    <div className={`consultation-request${showForm ? ' is-form' : ''}`}>
+      <button className="text-link" type="button" aria-expanded={showForm} aria-controls="consultation-form" onClick={() => setShowForm(value => !value)}>{showForm ? 'Вернуться к телефону и мессенджерам' : 'Удобнее, чтобы мы перезвонили?'}<CaretDown size={18} /></button>
+      {showForm && <div id="consultation-form"><p className="form-note">Оставьте контакты и коротко опишите вопрос.</p><LeadForm service={service} /></div>}
+    </div>
+  </div>;
+}
+
 /* Single-choice chips that behave as one radio group for screen readers and keyboards. */
 function ChoiceChips({ label, options, value, onChange }) {
-  return <div className="choice"><span className="choice-label">{label}</span>
-    <div className="choice-options" role="radiogroup" aria-label={label}>{options.map(option => <button type="button" role="radio" aria-checked={value === option} key={option} onClick={() => onChange(value === option ? '' : option)}>{option}</button>)}</div>
-  </div>;
+  const name = useId();
+  return <fieldset className="choice"><legend className="choice-label">{label}</legend>
+    <div className="choice-options">{options.map(option => <label key={option}><input type="radio" name={name} value={option} checked={value === option} onChange={() => onChange(option)} /><span>{option}</span></label>)}</div>
+  </fieldset>;
 }
 
 /* «Акция» из site.json → promo: одна карточка под первым экраном. Пусто (null) — блока нет. */
@@ -243,33 +263,61 @@ function Heading({ eyebrow, title, link }) {
   return <div className="section-heading"><div>{eyebrow && <p className="eyebrow">{eyebrow}</p>}<h2>{title}</h2></div>{link}</div>;
 }
 
-/* `path` is passed when the page is prerendered at build time; in the browser it is the current address. */
-/* Reviews are expanded by default; the visitor can collapse the live Yandex widget. */
 function Reviews() {
-  const [open, setOpen] = useState(true);
-  return <section className="reviews section wrap" id="reviews">
-    <Heading title="Отзывы клиентов" />
-    <div className="reviews-panel">
-      <div className="reviews-summary">
-        {site.rating ? <div className="reviews-score"><b>{ratingText}</b><span className="stars" aria-label={`Рейтинг ${ratingText} из 5`}>{[0, 1, 2, 3, 4].map(i => <Star key={i} size={22} weight={i < Math.round(site.rating.value) ? 'fill' : 'regular'} />)}</span><small>{site.rating.count} {reviewWord(site.rating.count)}</small></div>
-          : null}
-        <div className="reviews-copy">
-          <h3>Отзывы на Яндекс Картах</h3>
-        </div>
-        <div className="reviews-buttons">
-          <button type="button" className="button secondary" aria-expanded={open} aria-controls="reviews-widget" onClick={() => setOpen(value => !value)}>{open ? 'Свернуть отзывы' : 'Читать отзывы'}<CaretDown size={18} className={open ? 'is-flipped' : ''} /></button>
-          <a className="text-link" href={`${maps}reviews/?add-review=true`} target="_blank" rel="noreferrer"><PencilSimple size={18} />Оставить отзыв</a>
-        </div>
+  const track = useRef(null);
+  const [edges, setEdges] = useState({ start: true, end: false });
+
+  useEffect(() => {
+    const list = track.current;
+    function updateEdges() {
+      setEdges({
+        start: list.scrollLeft < 2,
+        end: list.scrollWidth - list.clientWidth - list.scrollLeft < 2,
+      });
+    }
+    updateEdges();
+    list.addEventListener('scroll', updateEdges, { passive: true });
+    const resize = new ResizeObserver(updateEdges);
+    resize.observe(list);
+    return () => {
+      resize.disconnect();
+      list.removeEventListener('scroll', updateEdges);
+    };
+  }, []);
+
+  function move(direction) {
+    const list = track.current;
+    const [first, second] = list.children;
+    const step = second.getBoundingClientRect().left - first.getBoundingClientRect().left;
+    const left = (Math.round(list.scrollLeft / step) + direction) * step;
+    list.scrollTo({ left });
+  }
+
+  return <section className="reviews section wrap" id="reviews" aria-labelledby="reviews-title">
+    <div className="reviews-heading">
+      <div>
+        <h2 id="reviews-title">Отзывы клиентов</h2>
+        <p>Кратко об отзывах из Яндекс Карт</p>
       </div>
-      {site.quotes?.length > 0 && <div className="quotes">{site.quotes.map(quote => <figure className="quote" key={quote.text}><blockquote>«{quote.text}»</blockquote><figcaption>{quote.author} · Яндекс Карты</figcaption></figure>)}</div>}
+      <a className="button secondary" href={`${maps}reviews/`} target="_blank" rel="noreferrer">Все отзывы<ArrowUpRight size={18} aria-hidden="true" /></a>
     </div>
-    {open && <div className="review-card" id="reviews-widget">
-      <iframe title="Отзывы The Big One Garage на Яндекс Картах" src="https://yandex.ru/maps-reviews-widget/152908357603?comments" loading="lazy" referrerPolicy="strict-origin-when-cross-origin" />
-      <a className="review-card-link" href={`${maps}reviews/`} target="_blank" rel="noreferrer">Все отзывы на Яндекс Картах<ArrowUpRight size={16} /></a>
-    </div>}
+    <ul className="review-track" id="review-track" ref={track} aria-label="Отзывы из Яндекс Карт" role="list" tabIndex={0}>
+      {yandexReviews.map(({ author, text }) => <li className="review-tile" key={author}>
+        <div className="review-tile-stars" role="img" aria-label="5 из 5 звёзд">
+          {Array.from({ length: 5 }, (_, i) => <Star key={i} size={17} weight="fill" aria-hidden="true" />)}
+        </div>
+        <p>{text}</p>
+        <div className="review-author">{author}</div>
+      </li>)}
+    </ul>
+    <div className="review-controls">
+      <button className="icon-button" type="button" aria-label="Предыдущий отзыв" aria-controls="review-track" aria-disabled={edges.start} onClick={() => { if (!edges.start) move(-1); }}><ArrowLeft size={20} aria-hidden="true" /></button>
+      <button className="icon-button" type="button" aria-label="Следующий отзыв" aria-controls="review-track" aria-disabled={edges.end} onClick={() => { if (!edges.end) move(1); }}><ArrowRight size={20} aria-hidden="true" /></button>
+    </div>
   </section>;
 }
 
+/* `path` is passed when the page is prerendered at build time; in the browser it is the current address. */
 export function App({ path = typeof location === 'undefined' ? BASE : location.pathname }) {
   const page = pageOf(path), home = page.type === 'home';
   const [menu, setMenu] = useState(false), [modal, setModal] = useState(null);
@@ -338,16 +386,23 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
       </section>
 
       <section className="services wrap section" id="prices">
-        <Heading title="Услуги" link={<a className="heading-link" href={`${BASE}prices.html`}>Все услуги<ArrowRight size={18} /></a>} />
+        <Heading title="Услуги и цены" link={<a className="heading-link" href={`${BASE}prices.html`}>Все услуги<ArrowRight size={18} /></a>} />
         <form className="finder-search" action={`${BASE}prices.html`} method="get" role="search">
           <MagnifyingGlass size={20} /><label className="sr-only" htmlFor="finder-q">Найти работу и цену</label>
           <input id="finder-q" name="q" type="search" placeholder="Колодки, ГРМ, R16…" enterKeyHint="search" />
           <button className="button secondary" type="submit">Найти</button>
         </form>
-        <div className="service-grid">{mainServices.map(({ id, title, text, image }) => <a className="service-card" key={id} href={directionLink(id)}>
-          <span className="service-card-photo"><img src={`${BASE}assets/service-${image}.webp`} width={512} height={320} alt="" loading="lazy" decoding="async" /></span>
-          <div className="service-card-copy"><h3>{title}</h3><p>{text}</p><ArrowRight size={18} aria-hidden="true" /></div>
-        </a>)}</div>
+        <div className="service-grid">{mainServices.map(({ id, title, text, image }) => {
+          const direction = directionById(id);
+          return <a className="service-card" key={id} href={directionLink(id)}>
+            <span className="service-card-photo"><img src={`${BASE}assets/service-${image}.webp`} width={512} height={320} alt="" loading="lazy" decoding="async" /></span>
+            <div className="service-card-copy"><h3>{title}</h3><p>{text}</p>
+              <p className="home-service-price"><strong>{direction.from ? `от ${direction.from.toLocaleString('ru-RU')} ₽` : 'После осмотра'}</strong>{direction.priceFor && <span>{direction.priceFor}</span>}</p>
+              <ArrowRight size={18} aria-hidden="true" />
+            </div>
+          </a>;
+        })}</div>
+        <p className="services-note">Стоимость для вашей машины согласуем до начала работ.</p>
       </section>
 
       <section className="trust wrap" id="trust" aria-label="Почему нам доверяют">
@@ -369,8 +424,8 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
         <div className="wrap">
           <section className="about-layout" id="masters" aria-labelledby="masters-title">
             <div className="about-copy">
-              <h2 id="masters-title">Мастера с многолетним опытом</h2>
-              <p>В нашей команде мастера по диагностике, слесарному ремонту и кузовной сварке. Работаем с разными марками. Можно приехать на плановое ТО или обратиться со сложной неисправностью, которая проявляется время от времени.</p>
+              <h2 id="masters-title">Наша мастерская на Соколиной Горе</h2>
+              <p>Здесь занимаемся диагностикой, слесарным ремонтом и кузовной сваркой. Покажем неисправность, обсудим варианты ремонта и согласуем стоимость до начала работ.</p>
             </div>
             <figure className="about-photo"><Photo name="workshop" full={1280} width={1280} height={853} sizes="(max-width: 759px) calc(100vw - 32px), (max-width: 1300px) 50vw, 620px" alt="Рабочая зона автосервиса Big One Garage" /></figure>
           </section>
@@ -399,7 +454,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
             <a className="contact-line" href={maps} target="_blank" rel="noreferrer"><MapPin size={20} /><span>{address}<small>Построить маршрут</small></span><ArrowUpRight size={18} /></a>
             {site.entry && <p className="contact-entry"><b>Как заехать.</b> {site.entry}</p>}
             <a className="contact-line" href="mailto:thebigonegarage@bk.ru"><span>thebigonegarage@bk.ru<small>Написать на почту</small></span><ArrowUpRight size={18} /></a>
-            <button className="button primary contact-cta" type="button" onClick={() => ask('', true)}>Оставить заявку<ArrowUpRight size={20} /></button>
+            <button className="button primary contact-cta" type="button" onClick={() => ask()}>Оставить заявку<ArrowUpRight size={20} /></button>
             {!site.hours?.length && <p className="form-note">Время визита уточняйте по телефону.</p>}
           </div>
           <figure className="map-card">
@@ -422,7 +477,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
     </div></footer>
 
     {modal && <Dialog title={modal.consultation ? 'Задать вопрос мастеру' : 'Узнать стоимость ремонта'} onClose={() => setModal(null)}>
-      <LeadForm key={modal.service} service={modal.service} />
+      {modal.consultation ? <Consultation key={modal.service} service={modal.service} /> : <LeadForm key={modal.service} service={modal.service} />}
     </Dialog>}
   </>;
 }
