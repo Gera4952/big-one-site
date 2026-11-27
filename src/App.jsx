@@ -297,7 +297,7 @@ function Reviews() {
     <div className="reviews-heading">
       <div>
         <h2 id="reviews-title">Отзывы клиентов</h2>
-        <p>Кратко об отзывах из Яндекс Карт</p>
+        <p>Отзывы с Яндекс Карт в кратком пересказе</p>
       </div>
       <a className="button secondary" href={`${maps}reviews/`} target="_blank" rel="noreferrer">Все отзывы<ArrowUpRight size={18} aria-hidden="true" /></a>
     </div>
@@ -374,8 +374,8 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
         <div className="hero-copy">
           {site.rating && <a className="hero-rating" href="#reviews"><Star size={18} weight="fill" /><b>{ratingText}</b><span>{site.rating.count} {reviewWord(site.rating.count)} на Яндекс Картах</span></a>}
           <p className="hero-location">Автосервис на Соколиной Горе</p>
-          <h1>Ремонт и обслуживание автомобилей</h1>
-          <p className="hero-intro">ТО, диагностика, ремонт и сварка кузова. Работаем с автомобилями любых марок.</p>
+          <h1>Ремонт и ТО автомобилей</h1>
+          <p className="hero-intro">Диагностика, ремонт и сварка кузова. Работаем с любыми марками.</p>
           <div className="hero-actions">
             <button className="button primary" onClick={() => ask('', true)}>Консультация<ArrowUpRight size={20} /></button>
             <a className="button secondary" href={`${BASE}prices.html`}>Услуги и цены</a>
@@ -392,6 +392,7 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
           <input id="finder-q" name="q" type="search" placeholder="Колодки, ГРМ, R16…" enterKeyHint="search" />
           <button className="button secondary" type="submit">Найти</button>
         </form>
+        <a className="text-link symptom-link" href="#problems">Не знаете, что сломалось?<ArrowRight size={16} aria-hidden="true" /></a>
         <div className="service-grid">{mainServices.map(({ id, title, text, image }) => {
           const direction = directionById(id);
           return <a className="service-card" key={id} href={directionLink(id)}>
@@ -410,29 +411,26 @@ export function App({ path = typeof location === 'undefined' ? BASE : location.p
         <a className="trust-reviews" href="#reviews">{site.rating ? <><Star size={18} weight="fill" /><b>{ratingText}</b>{site.rating.count} {reviewWord(site.rating.count)} на Яндекс Картах</> : <><Star size={18} weight="fill" />Читать отзывы клиентов на Яндекс Картах</>}<ArrowRight size={16} /></a>
       </section>
 
-      {site.promo?.title && <Promo promo={site.promo} onAsk={ask} />}
-
       <section className="problems wrap section" id="problems">
-        <Heading title="Что случилось с машиной?" />
+        <Heading title="Что беспокоит в машине?" />
         <div className="problem-grid">
           {problems.map(([title, id]) => <a className="problem-card" key={title} href={directionLink(id)}><h3>{title}</h3><ArrowRight size={20} aria-hidden="true" /></a>)}
-          <button className="problem-card problem-unknown" type="button" onClick={() => ask('', true)}><span className="problem-text"><span className="problem-title">Не знаю, в чём причина</span><p>Опишите, что заметили</p></span><ArrowUpRight size={20} aria-hidden="true" /></button>
+          <button className="problem-card problem-unknown" type="button" onClick={() => ask('', true)}><span className="problem-text"><span className="problem-title">Проконсультироваться</span><p>Если не знаете причину</p></span><ArrowUpRight size={20} aria-hidden="true" /></button>
         </div>
       </section>
+
+
+      {site.promo?.title && <Promo promo={site.promo} onAsk={ask} />}
 
       <section className="about section" id="about">
         <div className="wrap">
           <section className="about-layout" id="masters" aria-labelledby="masters-title">
             <div className="about-copy">
-              <h2 id="masters-title">Наша мастерская на Соколиной Горе</h2>
-              <p>Здесь занимаемся диагностикой, слесарным ремонтом и кузовной сваркой. Покажем неисправность, обсудим варианты ремонта и согласуем стоимость до начала работ.</p>
+              <h2 id="masters-title">Как проходит ремонт</h2>
+              <ol className="steps" role="list">{steps.map(([title, text]) => <li key={title}><div><h3>{title}</h3><p>{text}</p></div></li>)}</ol>
             </div>
-            <figure className="about-photo"><Photo name="workshop" full={1280} width={1280} height={853} sizes="(max-width: 759px) calc(100vw - 32px), (max-width: 1300px) 50vw, 620px" alt="Рабочая зона автосервиса Big One Garage" /></figure>
+            <figure className="about-photo"><Photo name="workshop" full={1280} width={1280} height={853} sizes="(max-width: 759px) calc(100vw - 32px), (max-width: 1300px) 50vw, 620px" alt="Рабочая зона автосервиса Big One Garage" /><figcaption>Мастерская Big One Garage на Соколиной Горе</figcaption></figure>
           </section>
-          <div className="repair-process">
-            <Heading title="Как проходит ремонт" />
-            <ol className="steps" role="list">{steps.map(([title, text], i) => <li key={title}><span className="step-number" aria-hidden="true">{i + 1}</span><div><h3>{title}</h3><p>{text}</p></div></li>)}</ol>
-          </div>
         </div>
       </section>
 

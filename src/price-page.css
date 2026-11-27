@@ -119,3 +119,7 @@
 @media (max-width: 410px) {
   .direction-page .breadcrumbs [aria-current], .direction-page .breadcrumb-current-separator { display: none; }
 }
+
+.catalog-match strong { display: block; margin-top: 3px; color: var(--red-text); }
+.price-instruction { margin-top: 6px; font-size: 14px; }
+.price-work:target { background: var(--surface-2); box-shadow: inset 3px 0 var(--red-text); }

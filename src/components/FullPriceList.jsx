@@ -6,6 +6,20 @@ import '../price-page.css';
 
 const BASE = import.meta.env.BASE_URL;
 const normalize = (text) => text.toLocaleLowerCase('ru').replaceAll('ё', 'е').replace(/(^|\s)[rр]\s*(?=\d)/g, '$1r');
+// Common inflections and alternate spellings used in customer requests.
+const searchForms = [
+  [/^колод(?:ка|ки|ок|ку|ками|ках|кам)$/, 'колодки'],
+  [/^масл(?:о|а|у|ом|е)$/, 'масло'],
+  [/^фильтр(?:а|ы|ов|ом|у|е)?$/, 'фильтр'],
+  [/^диск(?:а|и|ов|ом|у|е)?$/, 'диск'],
+  [/^гофр(?:а|ы|у|ой|е)$/, 'гофра'],
+  [/^замен(?:а|ы|у|ить|ой|е)$/, 'замена'],
+];
+const searchTerms = text => (normalize(text).match(/[a-zа-я0-9]+/g) || []).map(word =>
+  searchForms.find(([pattern]) => pattern.test(word))?.[1] || word
+);
+const workId = (groupIndex, rowIndex) => `work-${groupIndex + 1}-${rowIndex + 1}`;
+
 const catalogSections = serviceCatalog.map(({ id, title, navTitle, services }) => ({
   id, title, navTitle, services: services.map(item => directionBySlug(item.slug)),
 }));
@@ -20,21 +34,36 @@ function StartingPrice({ direction }) {
 function matchingService(direction, terms) {
   if (!terms.length) return { direction };
   const matches = (text) => {
-    const label = normalize(text);
-    return terms.every(term => label.includes(term));
+    const words = searchTerms(text);
+    return terms.every(term => words.some(word => word.includes(term)));
   };
   const serviceLabel = `${direction.catalogTitle} ${direction.h1} ${direction.name}`;
-  for (const group of direction.groups) {
-    const work = group.rows.find(row => matches(`${serviceLabel} ${group.name} ${row.name}`));
-    if (work) return { direction, work, group: group.name.replace(/:\s*$/, '') };
+  let fallback;
+  for (const [groupIndex, group] of direction.groups.entries()) {
+    const rowIndex = group.rows.findIndex(row => matches(`${group.name} ${row.name}`));
+    if (rowIndex !== -1) {
+      return {
+        direction,
+        work: group.rows[rowIndex],
+        group: group.name.replace(/:\s*$/, ''),
+        anchor: workId(groupIndex, rowIndex),
+      };
+    }
+    if (!fallback) {
+      const fallbackIndex = group.rows.findIndex(row => matches(`${serviceLabel} ${group.name} ${row.name}`));
+      if (fallbackIndex !== -1) {
+        fallback = { direction, work: group.rows[fallbackIndex], group: group.name.replace(/:\s*$/, ''), anchor: workId(groupIndex, fallbackIndex) };
+      }
+    }
   }
-  return matches(`${serviceLabel} ${direction.catalogDescription}`) ? { direction } : null;
+  if (matches(`${serviceLabel} ${direction.catalogDescription}`)) return { direction };
+  return fallback || null;
 }
 
 export function PriceRows({ groups, category, onSelect }) {
   return <div className="price-groups">{groups.map((group, i) => <div className="price-group" key={`${group.name}-${i}`}>
     {group.name && <h3>{group.name.replace(/:\s*$/, '')}</h3>}
-    <div className="price-table">{group.rows.map((row, j) => <button type="button" key={`${row.name}-${j}`} className="price-work" onClick={() => onSelect([category, group.name.replace(/:\s*$/, ''), row.name].filter((part, index, parts) => part && parts.indexOf(part) === index).join(' — '))} aria-label={`${row.name}: ${row.price}. Обсудить работу`}>
+    <div className="price-table">{group.rows.map((row, j) => <button type="button" key={`${row.name}-${j}`} className="price-work" id={workId(i, j)} onClick={() => onSelect([category, group.name.replace(/:\s*$/, ''), row.name].filter((part, index, parts) => part && parts.indexOf(part) === index).join(' — '))} aria-label={`${row.name}: ${row.price}. Обсудить работу`}>
       <span>{row.name.replace(/\s+[-–]\s+/g, ' — ')}</span><strong>{row.price}</strong>
     </button>)}</div>
   </div>)}</div>;
@@ -46,7 +75,17 @@ export function ServiceCatalog({ onSelect }) {
     const initialQuery = new URLSearchParams(location.search).get('q');
     if (initialQuery) setQuery(initialQuery);
   }, []);
-  const terms = normalize(query.trim()).split(/\s+/).filter(Boolean);
+  const searchInput = useRef(null);
+
+  function changeQuery(value) {
+    setQuery(value);
+    const url = new URL(location.href);
+    if (value.trim()) url.searchParams.set('q', value);
+    else url.searchParams.delete('q');
+    history.replaceState(history.state, '', url);
+  }
+
+  const terms = searchTerms(query);
   const sections = catalogSections.map(section => ({
     ...section, services: section.services.map(direction => matchingService(direction, terms)).filter(Boolean),
   })).filter(section => section.services.length > 0);
@@ -58,8 +97,8 @@ export function ServiceCatalog({ onSelect }) {
     <p className="section-intro">Выберите услугу, чтобы посмотреть работы и цены.</p>
     <div className="price-tools">
       <div className="price-search" role="search"><MagnifyingGlass size={20} aria-hidden="true" /><label className="sr-only" htmlFor="catalog-search">Поиск по услугам и работам</label>
-        <input id="catalog-search" type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Например, колодки или ГРМ" />
-        {query && <button type="button" className="icon-button" onClick={() => setQuery('')} aria-label="Очистить поиск"><X size={18} /></button>}
+        <input id="catalog-search" type="search" ref={searchInput} value={query} onChange={event => changeQuery(event.target.value)} placeholder="Например, колодки или ГРМ" />
+        {query && <button type="button" className="icon-button" onClick={() => { changeQuery(''); searchInput.current?.focus(); }} aria-label="Очистить поиск"><X size={18} /></button>}
       </div>
     </div>
     {terms.length > 0
@@ -68,14 +107,14 @@ export function ServiceCatalog({ onSelect }) {
     {sections.map(section => <section className="catalog-section" id={section.id} key={section.id} aria-labelledby={`${section.id}-title`}>
       <h2 id={`${section.id}-title`}>{section.title}</h2>
       <ul className="catalog-grid" role="list">
-        {section.services.map(({ direction, work, group }) => <li key={direction.id} id={direction.id}>
-          <a className="catalog-service" href={`${BASE}${direction.path}${work ? '#direction-prices' : ''}`}>
+        {section.services.map(({ direction, work, group, anchor }) => <li key={direction.id} id={direction.id}>
+          <a className="catalog-service" href={`${BASE}${direction.path}${anchor ? `#${anchor}` : ''}`}>
             <img src={`${BASE}assets/${direction.photo?.file || `service-${direction.image}.webp`}`} width={96} height={72} alt="" loading="lazy" decoding="async" />
             <div className="catalog-service-copy">
               <h3>{direction.catalogTitle}</h3>
-              <p>{direction.catalogDescription}</p>
+              {!work && <p>{direction.catalogDescription}</p>}
               {!work && <StartingPrice direction={direction} />}
-              {work && <p className="catalog-match">{[group, work.name, work.price].filter(Boolean).join(' · ')}</p>}
+              {work && <p className="catalog-match">{[group, work.name.replace(/\s+[-–]\s+/g, ' — ')].filter(Boolean).join(' · ')} <strong>{work.price}</strong></p>}
             </div>
             <ArrowRight className="catalog-service-arrow" size={17} aria-hidden="true" />
           </a>
@@ -95,7 +134,11 @@ export function ServiceCatalog({ onSelect }) {
 export function DirectionPrices({ direction, onSelect, contact }) {
   const priceList = useRef(null);
   useEffect(() => {
-    if (location.hash === '#direction-prices' && priceList.current) priceList.current.open = true;
+    const hash = location.hash;
+    if (hash === '#direction-prices' && priceList.current) priceList.current.open = true;
+    if (!/^#work-\d+-\d+$/.test(hash)) return;
+    const row = document.getElementById(hash.slice(1));
+    if (row) row.scrollIntoView({ behavior: 'instant', block: 'start' });
   }, []);
   const rows = rowsOf(direction);
   const related = direction.related.map(directionBySlug);
@@ -122,19 +165,20 @@ export function DirectionPrices({ direction, onSelect, contact }) {
       </figure>
     </header>
     <div className="direction-content">
-      <section>
-        <h2>{direction.heading}</h2>
-        <p>{direction.text}</p>
-      </section>
       <section id="direction-prices">
         <h2>Работы и цены</h2>
-        <p>{direction.priceNote || 'В прайсе указаны ориентиры. Сумму для вашей машины согласуем перед ремонтом.'}</p>
+        <p>{direction.priceNote || 'Точную стоимость согласуем перед ремонтом.'}</p>
+        <p className="price-instruction">Нажмите на работу, чтобы уточнить цену для вашей машины.</p>
         {rows.length > 12
           ? <details className="price-expander" ref={priceList} open>
               <summary>Прайс · {works(rows.length)}<CaretDown size={17} /></summary>
               <PriceRows groups={direction.groups} category={direction.name} onSelect={onSelect} />
             </details>
           : <PriceRows groups={direction.groups} category={direction.name} onSelect={onSelect} />}
+      </section>
+      <section>
+        <h2>{direction.heading}</h2>
+        <p>{direction.text}</p>
       </section>
       <section>
         <h2>{direction.question}</h2>

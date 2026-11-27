@@ -547,3 +547,21 @@ input[aria-invalid=true] { border-color: #ff7a73 !important; }
 @media (min-width: 620px) { .review-track { --review-width: calc((100% - var(--review-gap)) / 2); } }
 @media (min-width: 960px) { .review-track { --review-width: calc((100% - 2 * var(--review-gap)) / 3); } }
 @media (prefers-reduced-motion: no-preference) { .review-track { scroll-behavior: smooth; } }
+
+
+/* Keep the service finder close to the introduction on a phone. */
+.symptom-link { width: fit-content; margin-top: -8px; white-space: normal; }
+.about-copy .steps { margin-top: 16px; }
+.about-copy .steps li { border-top: 1px solid var(--line); padding-block: 12px; }
+.about-copy .steps p { margin-top: 4px; }
+.about-photo figcaption { margin-top: 8px; color: var(--muted); font-size: 13px; }
+@media (max-width: 759px) {
+  .hero { padding-bottom: 20px; }
+  .hero-photo { aspect-ratio: 2.2 / 1; }
+  .services { padding-top: 24px; }
+}
+@media (max-width: 759px) {
+  .lead-form { gap: 10px; }
+  .lead-form > label, .lead-fields-grid label { padding-bottom: 0; }
+  .lead-fields-grid { row-gap: 10px; }
+}
